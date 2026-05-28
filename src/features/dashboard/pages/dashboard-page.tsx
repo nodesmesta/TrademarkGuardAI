@@ -125,7 +125,6 @@ function ProductsPanel({ token }: { token: string }) {
 }
 
 function DashboardContent() {
-  const { user } = useAuth()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -167,12 +166,7 @@ function DashboardContent() {
     <div className="space-y-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Here's what's happening with your trademarks today</p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <Button variant="outline" onClick={fetchDashboardData} disabled={loading} className="flex items-center gap-2">
           {loading && <Spinner size="sm" />}
           Refresh

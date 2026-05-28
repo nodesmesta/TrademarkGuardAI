@@ -161,9 +161,9 @@ export const chartData = [
 
 export const dashboardData: DashboardData = {
   stats: statsData,
-  violations: violationsData,
-  activities: activitiesData,
-  alerts: alertsData,
+  violations: [],
+  activities: [],
+  alerts: [],
   chartData: chartData
 };
 
