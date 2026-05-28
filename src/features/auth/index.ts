@@ -1,0 +1,6 @@
+export { default as SignInPage } from './pages/signin-page'
+export { default as SignUpPage } from './pages/signup-page'
+export { useAuth } from './hooks/use-auth'
+export { AuthProvider } from './components/auth-provider'
+export type * from './types'
+export * from './lib/auth-service'

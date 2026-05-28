@@ -1,0 +1,306 @@
+// src/features/auth/lib/auth-service.ts
+// Happy-path implementation for authentication dengan database integration
+
+import { 
+  AuthError, 
+  SendPinResult, 
+  VerifyPinResult, 
+  SignUpResult,
+  User,
+  PinSession,
+  IEmailService,
+  IAuthService,
+  AuthConfig
+} from '../types'
+
+import { DemoEmailService, getEmailService } from './email-service'
+import { getDatabaseService, IDatabaseService } from './database-service'
+
+export class AuthService implements IAuthService {
+  private emailService: IEmailService
+  private databaseService: IDatabaseService
+  private demoMode: boolean
+  
+  constructor(emailService?: IEmailService, databaseService?: IDatabaseService) {
+    this.emailService = emailService || getEmailService()
+    this.databaseService = databaseService || getDatabaseService()
+    
+    // Improved demo mode detection
+    const resendApiKey = process.env.RESEND_API_KEY
+    const isDemoResendKey = resendApiKey?.startsWith('re_demo_') || !resendApiKey
+    this.demoMode = process.env.NODE_ENV === 'development' || isDemoResendKey
+    
+    console.log(`[AUTH SERVICE] Initialized in ${this.demoMode ? 'DEMO' : 'PRODUCTION'} mode`)
+    if (this.demoMode) {
+      console.log('[AUTH SERVICE] Using demo implementations for email and database')
+    }
+  }
+
+  /**
+   * Send PIN to email - Happy Path Implementation
+   * 1. Early validation
+   * 2. Assume success
+   * 3. Clean error separation
+   */
+  async sendPin(email: string): Promise<SendPinResult> {
+    // 1. EARLY VALIDATION (before try-catch)
+    if (!this.isValidEmail(email)) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Please provide a valid email address'
+        }
+      }
+    }
+
+    // 2. HAPPY PATH - assume everything will work
+    try {
+      // Generate PIN
+      const pin = this.generatePin()
+      
+      // Store PIN session in database
+      await this.databaseService.storePinSession(email, pin)
+      
+      // ALWAYS log PIN in development mode for testing
+      if (this.demoMode) {
+        console.log(`[AUTH DEBUG] PIN for ${email}: ${pin} (development mode)`)
+      }
+      
+      // Send email - demo mode logs to console
+      if (this.demoMode) {
+        console.log(`[DEMO] PIN for ${email}: ${pin}`)
+        return {
+          success: true,
+          data: {
+            message: 'PIN sent (demo mode)',
+            demoPin: pin
+          }
+        }
+      }
+      
+      // Production mode - send actual email
+      await this.emailService.sendPinEmail(email, pin)
+      
+      return {
+        success: true,
+        data: {
+          message: 'PIN sent successfully'
+        }
+      }
+      
+    } catch (error) {
+      // 3. ERROR HANDLING - separated from business logic
+      return this.handleSendPinError(error)
+    }
+  }
+
+  /**
+   * Verify PIN - Happy Path
+   */
+  async verifyPin(email: string, pin: string): Promise<VerifyPinResult> {
+    // Early validation
+    if (!email || !pin) {
+      return {
+        success: false,
+        error: {
+          code: 'MISSING_CREDENTIALS',
+          message: 'Email and PIN are required'
+        }
+      }
+    }
+
+    try {
+      // Get stored PIN session from database
+      const session = await this.databaseService.getPinSession(email)
+      
+      if (!session) {
+        return {
+          success: false,
+          error: {
+            code: 'PIN_SESSION_EXPIRED',
+            message: 'PIN session expired or not found'
+          }
+        }
+      }
+
+      // Verify PIN
+      if (session.pin !== pin) {
+        return {
+          success: false,
+          error: {
+            code: 'INVALID_PIN',
+            message: 'Invalid PIN code'
+          }
+        }
+      }
+
+      // Check expiration
+      if (this.isPinExpired(session)) {
+        return {
+          success: false,
+          error: {
+            code: 'PIN_EXPIRED',
+            message: 'PIN has expired'
+          }
+        }
+      }
+
+      // HAPPY PATH - PIN verified successfully
+      const user = await this.getOrCreateUser(email)
+      const token = this.generateAuthToken(user)
+      
+      // Store refresh token in database
+      await this.databaseService.storeRefreshToken(user.id, token)
+      
+      // Clean up used PIN
+      await this.databaseService.clearPinSession(email)
+      
+      return {
+        success: true,
+        data: {
+          user,
+          token,
+          message: 'Authentication successful'
+        }
+      }
+      
+    } catch (error) {
+      return this.handleVerifyPinError(error)
+    }
+  }
+
+  /**
+   * Sign Up - Happy Path
+   */
+  async signUp(email: string, name?: string): Promise<SignUpResult> {
+    // Early validation
+    if (!this.isValidEmail(email)) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Please provide a valid email address'
+        }
+      }
+    }
+
+    try {
+      // Check if user already exists
+      const existingUser = await this.databaseService.findUserByEmail(email)
+      if (existingUser) {
+        return {
+          success: false,
+          error: {
+            code: 'USER_EXISTS',
+            message: 'User with this email already exists'
+          }
+        }
+      }
+
+      // HAPPY PATH - Create new user
+      const user = await this.databaseService.createUser({
+        email,
+        name: name || email.split('@')[0],
+        createdAt: new Date()
+      })
+
+      // Send welcome email (optional)
+      if (!this.demoMode) {
+        await this.emailService.sendWelcomeEmail(email, user.name)
+      }
+
+      return {
+        success: true,
+        data: {
+          user,
+          message: 'Account created successfully'
+        }
+      }
+      
+    } catch (error) {
+      return this.handleSignUpError(error)
+    }
+  }
+
+  // ========== HELPER METHODS ==========
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  private generatePin(): string {
+    // 6-digit PIN
+    // Untuk testing di development mode, gunakan PIN tetap
+    if (this.demoMode) {
+      console.log(`[AUTH DEBUG] Using demo PIN for development`)
+      return '123456' // Fixed demo PIN for testing
+    }
+    return Math.floor(100000 + Math.random() * 900000).toString()
+  }
+
+  private isPinExpired(session: PinSession): boolean {
+    return new Date() > session.expiresAt
+  }
+
+  private async getOrCreateUser(email: string): Promise<User> {
+    // Cek apakah user sudah ada
+    const existingUser = await this.databaseService.findUserByEmail(email)
+    if (existingUser) {
+      return existingUser
+    }
+    
+    // Jika belum ada, buat user baru
+    return await this.databaseService.createUser({
+      email,
+      name: email.split('@')[0],
+      createdAt: new Date()
+    })
+  }
+
+  private generateAuthToken(user: User): string {
+    // Generate simple token dengan timestamp
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(7)
+    return `token-${user.id}-${timestamp}-${random}`
+  }
+
+  // ========== ERROR HANDLERS ==========
+
+  private handleSendPinError(error: any): SendPinResult {
+    console.error('Send PIN error:', error)
+    
+    return {
+      success: false,
+      error: {
+        code: 'SEND_PIN_FAILED',
+        message: 'Failed to send PIN. Please try again.'
+      }
+    }
+  }
+
+  private handleVerifyPinError(error: any): VerifyPinResult {
+    console.error('Verify PIN error:', error)
+    
+    return {
+      success: false,
+      error: {
+        code: 'VERIFY_PIN_FAILED',
+        message: 'Failed to verify PIN. Please try again.'
+      }
+    }
+  }
+
+  private handleSignUpError(error: any): SignUpResult {
+    console.error('Sign up error:', error)
+    
+    return {
+      success: false,
+      error: {
+        code: 'SIGNUP_FAILED',
+        message: 'Failed to create account. Please try again.'
+      }
+    }
+  }
+}
