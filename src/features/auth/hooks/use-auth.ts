@@ -87,8 +87,9 @@ export function useAuth(): UseAuthReturn {
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
+      // Also store in cookie so middleware can read it server-side
+      document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
-      console.log('[useAuth] Auth successful. Token stored in localStorage.')
       router.push('/dashboard')
     }
     
@@ -143,6 +144,7 @@ export function useAuth(): UseAuthReturn {
     
     localStorage.removeItem('user')
     localStorage.removeItem('token')
+    document.cookie = 'token=; path=/; max-age=0'
     
     setUser(null)
     router.push('/signin')
