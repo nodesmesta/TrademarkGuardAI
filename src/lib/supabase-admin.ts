@@ -1,12 +1,20 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Server-side admin client – using service role key for admin operations
-// This file should ONLY be imported in API routes (server-side)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Lazy singleton — only instantiated at runtime, not at build time
+let _client: SupabaseClient | null = null
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Supabase URL or SERVICE_ROLE_KEY missing in environment variables')
+export function getSupabaseAdmin(): SupabaseClient {
+  if (_client) return _client
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Supabase URL or SERVICE_ROLE_KEY missing')
+  _client = createClient(url, key)
+  return _client
 }
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
+// Proxy so existing imports of `supabaseAdmin.from(...)` still work
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return (getSupabaseAdmin() as any)[prop]
+  },
+})
