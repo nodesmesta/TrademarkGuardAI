@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@/utils/supabase/server';
-import { SignJWT } from 'jose';
 
 /**
  * POST /api/auth/verify-pin
@@ -128,38 +127,23 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Generate proper Supabase JWT token
+    // Generate JWT token signed with SUPABASE_JWT_SECRET
+    const { SignJWT } = await import('jose');
     const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
     const now = Math.floor(Date.now() / 1000);
-    const expiry = now + (60 * 60); // 1 hour expiry
 
-    const accessToken = await new SignJWT({ 
+    const accessToken = await new SignJWT({
       role: 'authenticated',
-      aal: 'aal1',
-      amr: [{ method: 'pin', timestamp: now }]
+      email: user.email,
+      name: user.user_metadata?.full_name ?? '',
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt(now)
-      .setExpirationTime(expiry)
       .setSubject(user.id)
-      .setAudience('authenticated')
+      .setIssuedAt(now)
+      .setExpirationTime(now + 60 * 60) // 1 hour
       .sign(jwtSecret);
 
-    // Create refresh token (random string)
     const refreshToken = crypto.randomUUID();
-
-    // Store refresh token in database (optional, for token rotation)
-    await supabase
-      .from('auth_pins')
-      .update({ 
-        metadata: { 
-          ...pinRecord.metadata,
-          refresh_token: refreshToken,
-          last_refresh: new Date().toISOString()
-        } 
-      })
-      .eq('id', pinRecord.id)
-      .select();
 
     // Prepare user data
     const userData = {

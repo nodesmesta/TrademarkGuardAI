@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
-import { createAdminSupabaseClient } from '@/utils/supabase/server';
 
 // Mock dashboard data used for development and testing
 const mockDashboardData = {
@@ -28,7 +27,6 @@ const mockDashboardData = {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Accept token from Authorization header (localStorage-based auth)
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '').trim();
 
@@ -36,19 +34,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
     }
 
-    // Validate token against Supabase and get user
-    const supabase = await createAdminSupabaseClient();
-    const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
-
-    if (error || !supabaseUser) {
+    let parsedUser: { id: string; email: string; name: string };
+    try {
+      const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
+      const { payload } = await jwtVerify(token, jwtSecret);
+      parsedUser = {
+        id: payload.sub as string,
+        email: payload.email as string ?? '',
+        name: payload.name as string ?? '',
+      };
+    } catch {
       return NextResponse.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, { status: 401 });
     }
-
-    const parsedUser = {
-      id: supabaseUser.id,
-      email: supabaseUser.email ?? '',
-      name: supabaseUser.user_metadata?.full_name ?? '',
-    };
 
     return NextResponse.json({
       success: true,
