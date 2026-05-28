@@ -49,3 +49,4 @@ local-d1.db
 # demo and testing scripts (not used in production)
 scripts/demo-*.js
 scripts/run-scheduler*.js
+.claude/
