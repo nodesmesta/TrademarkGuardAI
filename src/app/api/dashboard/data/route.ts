@@ -28,47 +28,27 @@ const mockDashboardData = {
  */
 export async function GET(request: NextRequest) {
   try {
-    const userCookie = request.cookies.get('user')?.value;
-    const tokenCookie = request.cookies.get('token')?.value;
+    // Accept token from Authorization header (localStorage-based auth)
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '').trim();
 
-    if (!userCookie || !tokenCookie) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized', message: 'Authentication required' }, { status: 401 });
     }
 
-    // Step 1: Validate JWT token signature
-    const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
-    
-    try {
-      await jwtVerify(tokenCookie, jwtSecret);
-    } catch (error: any) {
-      console.error('[dashboard/data] JWT validation failed:', error.message);
+    // Validate token against Supabase and get user
+    const supabase = await createAdminSupabaseClient();
+    const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
+
+    if (error || !supabaseUser) {
       return NextResponse.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Step 2: Parse user data from cookie
-    // User data was already validated during PIN verification and JWT generation
-    const parsedUser = JSON.parse(decodeURIComponent(userCookie));
-
-    // Step 3: Optional - Verify user still exists in auth.users (for security)
-    // This is a soft check - if user was deleted from auth, we still allow access
-    // because the JWT is valid and signed by us
-    try {
-      const supabase = await createAdminSupabaseClient();
-      const { data: usersData } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 100,
-      });
-
-      const userExists = usersData?.users?.some(u => u.id === parsedUser.id);
-      
-      if (!userExists) {
-        console.warn('[dashboard/data] User not found in auth.users but JWT is valid:', parsedUser.id);
-        // Continue anyway - JWT is valid, user might be in process of being synced
-      }
-    } catch (dbError) {
-      console.warn('[dashboard/data] Could not verify user in auth.users:', dbError);
-      // Continue anyway - JWT validation passed
-    }
+    const parsedUser = {
+      id: supabaseUser.id,
+      email: supabaseUser.email ?? '',
+      name: supabaseUser.user_metadata?.full_name ?? '',
+    };
 
     return NextResponse.json({
       success: true,

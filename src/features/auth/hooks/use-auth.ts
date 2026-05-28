@@ -135,7 +135,11 @@ export function useAuth(): UseAuthReturn {
   const logout = async () => {
     console.log('[useAuth] Logging out...')
     
-    await fetch('/api/auth/logout', { method: 'POST' }).catch((e) => console.error('[useAuth] Logout request failed:', e))
+    const token = localStorage.getItem('token')
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch((e) => console.error('[useAuth] Logout request failed:', e))
     
     localStorage.removeItem('user')
     localStorage.removeItem('token')
