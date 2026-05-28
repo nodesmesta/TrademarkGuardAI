@@ -106,8 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    // Destroy Supabase session
-    await fetch('/api/auth/logout', { method: 'POST' }).catch((e) => console.error('[AuthContext] Logout request failed:', e))
+    // Destroy Supabase session — send token so server can invalidate the correct session
+    const token = localStorage.getItem('token')
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).catch((e) => console.error('[AuthContext] Logout request failed:', e))
     
     // Clear localStorage
     localStorage.removeItem('user')
