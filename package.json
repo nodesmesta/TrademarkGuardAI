@@ -7,7 +7,6 @@
     "build": "next build",
     "build:clean": "rm -rf .next && next build",
     "start": "next start",
-
     "monitor:test": "node -e \"require('ts-node').register(); const { startScheduler } = require('./src/lib/openclaw-scheduler.ts'); startScheduler();\"",
     "api:test": "curl -X POST http://localhost:3000/api/trademark-new -H 'Content-Type: application/json' -d '{\"trademark\":\"Claude\",\"url\":\"https://twitter.com/search?q=claude\"}'"
   },

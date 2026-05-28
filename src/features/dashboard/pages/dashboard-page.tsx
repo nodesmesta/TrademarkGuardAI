@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/features/ui/button'
 import { ProtectedLayout } from '@/features/auth/components/protected-layout'
 import { useAuth } from '@/features/auth/hooks/use-auth'
@@ -10,20 +10,116 @@ import {
   AlertCard,
   dashboardData as mockDashboardData,
 } from '../components'
+import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
 
 function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-8 h-8 border-3',
-    lg: 'w-12 h-12 border-4',
-  }
+  const sizeClasses = { sm: 'w-4 h-4 border-2', md: 'w-8 h-8 border-3', lg: 'w-12 h-12 border-4' }
   return (
-    <div
-      className={`inline-block animate-spin rounded-full border-blue-600 border-t-transparent ${sizeClasses[size]}`}
-      role="status"
-      aria-label="Loading"
-    >
+    <div className={`inline-block animate-spin rounded-full border-blue-600 border-t-transparent ${sizeClasses[size]}`} role="status" aria-label="Loading">
       <span className="sr-only">Loading...</span>
+    </div>
+  )
+}
+
+interface Product { id: string; name: string; description?: string; keywords: string[]; active: boolean; created_at: string }
+
+function ProductsPanel({ token }: { token: string }) {
+  const [products, setProducts] = useState<Product[]>([])
+  const [showForm, setShowForm] = useState(false)
+  const [scanning, setScanning] = useState<string | null>(null)
+  const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
+
+  const fetchProducts = useCallback(async () => {
+    const res = await fetch('/api/products', { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    if (data.success) setProducts(data.products)
+  }, [token])
+
+  useEffect(() => { fetchProducts() }, [fetchProducts])
+
+  const handleDelete = async (id: string) => {
+    await fetch('/api/products', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    })
+    fetchProducts()
+  }
+
+  const handleScan = async (id: string) => {
+    setScanning(id)
+    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning…' }))
+    try {
+      const res = await fetch(`/api/products/${id}/scan`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      setScanMsg((prev) => ({
+        ...prev,
+        [id]: data.success
+          ? `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
+          : `Error: ${data.error}`,
+      }))
+    } finally {
+      setScanning(null)
+    }
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registered Products</h2>
+        <Button size="sm" onClick={() => setShowForm((v) => !v)} className="bg-blue-600 hover:bg-blue-700 text-white">
+          {showForm ? 'Cancel' : '+ Add Product'}
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <ProductRegistrationForm token={token} onSuccess={() => { setShowForm(false); fetchProducts() }} />
+        </div>
+      )}
+
+      {products.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400 text-sm">No products registered yet. Add one to start monitoring.</p>
+      ) : (
+        <ul className="space-y-3">
+          {products.map((p) => (
+            <li key={p.id} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
+                {p.description && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.description}</p>}
+                {p.keywords.length > 0 && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{p.keywords.join(', ')}</p>
+                )}
+                {scanMsg[p.id] && (
+                  <p className="text-xs mt-1 text-green-700 dark:text-green-400">{scanMsg[p.id]}</p>
+                )}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={scanning === p.id}
+                  onClick={() => handleScan(p.id)}
+                  className="text-xs"
+                >
+                  {scanning === p.id ? <Spinner size="sm" /> : 'Scan Now'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDelete(p.id)}
+                  className="text-xs text-red-600 hover:text-red-700"
+                >
+                  Delete
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -33,90 +129,34 @@ function DashboardContent() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : ''
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true)
-    
-    // ✅ Get token from localStorage
-    const token = localStorage.getItem('token')
-    
+    const t = localStorage.getItem('token')
     const response = await fetch('/api/dashboard/data', {
-      headers: token ? { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      } : {}
+      headers: t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {},
     })
     if (!response.ok) {
-      if (response.status === 401) {
-        setError('Authentication required. Please sign in again.')
-      } else {
-        setError(`Failed to fetch dashboard data: ${response.statusText}`)
-      }
+      setError(response.status === 401 ? 'Authentication required.' : `Error: ${response.statusText}`)
       setData(mockDashboardData)
-      setLoading(false)
-      return
-    }
-    const result = await response.json()
-    if (result.success) {
-      setData(result.data)
     } else {
-      setError(result.message || 'Failed to load dashboard data')
-      setData(mockDashboardData)
+      const result = await response.json()
+      setData(result.success ? result.data : mockDashboardData)
     }
     setLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
     fetchDashboardData()
     const interval = setInterval(fetchDashboardData, 30000)
     return () => clearInterval(interval)
-  }, [])
-
-  const refreshData = async () => {
-    setLoading(true)
-    
-    // ✅ Get token from localStorage
-    const token = localStorage.getItem('token')
-    
-    const response = await fetch('/api/dashboard/data', {
-      headers: token ? { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      } : {}
-    })
-    if (!response.ok) {
-      setError(`Refresh failed: ${response.statusText}`)
-    } else {
-      const result = await response.json()
-      setData(result.data)
-    }
-    setLoading(false)
-  }
+  }, [fetchDashboardData])
 
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your dashboard data...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error && !data) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-6">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-600 dark:text-red-400 text-xl">!</span>
-          </div>
-          <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Failed to Load Dashboard</h3>
-          <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-          <Button variant="outline" onClick={refreshData} className="border-red-300 text-red-700 hover:bg-red-50">
-            Try Again
-          </Button>
-        </div>
+        <div className="text-center"><Spinner size="lg" /><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard…</p></div>
       </div>
     )
   }
@@ -125,6 +165,7 @@ function DashboardContent() {
 
   return (
     <div className="space-y-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -132,42 +173,38 @@ function DashboardContent() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Here's what's happening with your trademarks today</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={refreshData} disabled={loading} className="flex items-center">
-            {loading && <Spinner size="sm" />}
-            <span className="ml-2">Refresh Data</span>
-          </Button>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">New Scan</Button>
-        </div>
+        <Button variant="outline" onClick={fetchDashboardData} disabled={loading} className="flex items-center gap-2">
+          {loading && <Spinner size="sm" />}
+          Refresh
+        </Button>
       </div>
+
+      {error && (
+        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">{error}</div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat: any, index: number) => (
-          <StatCard 
-            key={index} 
-            label={stat.label} 
-            value={stat.value} 
-            change={stat.change}
-            changeType={stat.changeType}
-            icon={stat.icon} 
-          />
+        {stats.map((stat: any, i: number) => (
+          <StatCard key={i} label={stat.label} value={stat.value} change={stat.change} changeType={stat.changeType} icon={stat.icon} />
         ))}
       </div>
+
+      {/* Products + Violations */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 space-y-8">
           <ViolationsTable violations={violations} />
+          {token && <ProductsPanel token={token} />}
         </div>
         <div className="space-y-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">High Priority Alerts</h2>
-              <Button variant="ghost" size="sm" className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
-                View All
-              </Button>
             </div>
             <div className="space-y-4">
-              {alerts.map((alert: any) => (
-                <AlertCard key={alert.id} alert={alert} />
-              ))}
+              {alerts.length > 0
+                ? alerts.map((alert: any) => <AlertCard key={alert.id} alert={alert} />)
+                : <p className="text-sm text-gray-500">No alerts at this time.</p>}
             </div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
