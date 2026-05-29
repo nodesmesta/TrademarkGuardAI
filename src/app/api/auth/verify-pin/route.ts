@@ -28,7 +28,11 @@ export async function POST(request: NextRequest) {
         .setSubject(userId)
         .sign(jwtSecret);
     const user = { id: email, email, name: '' };
-    return NextResponse.json({ success: true, user, token });
+    return NextResponse.json({ success: true, user, token }, {
+      headers: {
+        'Set-Cookie': `token=${token}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; HttpOnly`
+      }
+    });
   } catch (e) {
     console.error('[verify-pin] error:', e);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
