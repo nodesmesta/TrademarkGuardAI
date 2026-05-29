@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-// Link import removed – not needed
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/features/ui/button'
 import { cn } from '@/features/ui'
 import { useAuth } from '@/contexts/auth-context'
@@ -22,6 +21,7 @@ export default function DashboardLayout({ children, className }: DashboardLayout
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, logout } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -132,7 +132,10 @@ export default function DashboardLayout({ children, className }: DashboardLayout
                         ? "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-600 dark:text-blue-400 shadow-sm border border-blue-200/50 dark:border-blue-800/50" 
                         : "text-gray-700 dark:text-gray-300"
                     )}
-                    onClick={() => console.log(`Navigate to ${item.id}`)}
+                    onClick={() => {
+                      router.push(item.href)
+                      setMobileSidebarOpen(false)
+                    }}
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <item.icon className={cn("w-5 h-5 transition-colors", item.active ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400")} />
@@ -196,7 +199,7 @@ export default function DashboardLayout({ children, className }: DashboardLayout
                       variant="ghost"
                       className="w-full justify-start px-4 py-2.5 text-sm hover:bg-blue-50/50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300"
                       onClick={() => {
-                        console.log('Navigate to profile')
+                        router.push('/dashboard/settings')
                         setUserMenuOpen(false)
                       }}
                     >
