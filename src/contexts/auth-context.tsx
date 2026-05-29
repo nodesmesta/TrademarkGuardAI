@@ -68,12 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
-      // Also set cookie so middleware can read it (HttpOnly cookie is set by server via Set-Cookie header)
-      // Set a non-HttpOnly copy for client-side middleware fallback
+      // Set cookie for middleware - use hard navigation so cookie is sent with next request
       document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
-      // Redirect after a short delay to allow state updates
-      setTimeout(() => router.push('/dashboard'), 100)
+      // Hard navigation ensures cookie is included in the request to /dashboard
+      window.location.href = '/dashboard'
     }
 
     return data
