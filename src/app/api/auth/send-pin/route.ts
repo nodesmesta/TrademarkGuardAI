@@ -16,9 +16,15 @@ export async function POST(request: NextRequest) {
 
     // Check if email is registered in Supabase
     const normalizedEmail = email.toLowerCase().trim();
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({ filter: `email.eq.${normalizedEmail}` } as any);
-    const existingUser = userData?.users?.[0];
-    if (userError || !existingUser) {
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    if (userError) {
+      console.error('[send-pin] Failed to list users:', userError);
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    }
+    const existingUser = userData.users.find(
+      (u) => u.email?.toLowerCase() === normalizedEmail
+    );
+    if (!existingUser) {
       return NextResponse.json(
         { success: false, error: 'Email not registered. Please sign up first.' },
         { status: 404 }

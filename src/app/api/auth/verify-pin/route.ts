@@ -24,9 +24,15 @@ export async function POST(request: NextRequest) {
     pinStore.delete(normalizedEmail);
 
     // Fetch real user from Supabase
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({ filter: `email.eq.${normalizedEmail}` } as any);
-    const supabaseUser = userData?.users?.[0];
-    if (userError || !supabaseUser) {
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    if (userError) {
+      console.error('[verify-pin] Failed to list users:', userError);
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    }
+    const supabaseUser = userData.users.find(
+      (u) => u.email?.toLowerCase() === normalizedEmail
+    );
+    if (!supabaseUser) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
