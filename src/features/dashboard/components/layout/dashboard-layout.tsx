@@ -36,13 +36,13 @@ export default function DashboardLayout({ children, className }: DashboardLayout
   const navItems = [
     // active flag will be set dynamically below
     { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard', badge: undefined },
-    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard', badge: 5 },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard', badge: undefined },
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard', badge: 12 },
-    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard', badge: undefined },
+    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard/monitoring', badge: 5 },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics', badge: undefined },
+    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard/alerts', badge: 12 },
+    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard/reports', badge: undefined },
     { id: 'users', label: 'Users Data', icon: Users, href: '/dashboard/users', badge: undefined },
-    { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard', badge: undefined },
-    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard', badge: undefined },
+    { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard/ai-chat', badge: undefined },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings', badge: undefined },
   ]
 
   const navItemsWithActive = navItems.map(item => ({

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/features/ui/button'
 import { ProtectedLayout } from '@/features/auth/components/protected-layout'
 import { useAuth } from '@/features/auth/hooks/use-auth'
-import { useRouter } from 'next/navigation'
 import {
   StatCard,
   ViolationsTable,
@@ -11,6 +10,7 @@ import {
   AlertCard,
   dashboardData as mockDashboardData,
 } from '../components'
+import { useRouter } from 'next/navigation'
 import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
 import ChatBot from '../components/ChatBot'
 
@@ -29,7 +29,6 @@ function ProductsPanel({ token }: { token: string }) {
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
   const [scanning, setScanning] = useState<string | null>(null);
-  const router = useRouter();
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
 
   const fetchProducts = useCallback(async () => {
@@ -49,8 +48,30 @@ function ProductsPanel({ token }: { token: string }) {
     fetchProducts()
   }
 
-  const handleScan = (id: string) => {
-    router.push(`/scanner?id=${id}`);
+  const handleScan = async (id: string) => {
+    setScanning(id);
+    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning…' }));
+    try {
+      const res = await fetch(`/api/products/${id}/scan`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      // Save result for analytics view
+      if (data.success) {
+        localStorage.setItem(`scanResult_${id}`, JSON.stringify(data));
+        // Redirect to analytics page with product id query param
+        router.push(`/dashboard/analytics?product=${id}`);
+      }
+      setScanMsg((prev) => ({
+        ...prev,
+        [id]: data.success
+          ? `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
+          : `Error: ${data.error}`,
+      }));
+    } finally {
+      setScanning(null);
+    }
   }
 
   return (
@@ -92,7 +113,7 @@ function ProductsPanel({ token }: { token: string }) {
                   onClick={() => handleScan(p.id)}
                   className="text-xs"
                 >
-                  {scanning === p.id ? <Spinner size="sm" /> : 'Scan Now'}
+                  scanning === p.id ? 'Scanning…' : 'Scan Now'
                 </Button>
                 <Button
                   size="sm"
@@ -142,7 +163,7 @@ function DashboardContent() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center"><Spinner size="lg" /><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard…</p></div>
+        <div className="text-center"><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard…</p></div>
       </div>
     )
   }
@@ -155,7 +176,7 @@ function DashboardContent() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <Button variant="outline" onClick={fetchDashboardData} disabled={loading} className="flex items-center gap-2">
-          {loading && <Spinner size="sm" />}
+          {loading && <span className="mr-2 text-sm">Updating…</span>}
           Refresh
         </Button>
       </div>
