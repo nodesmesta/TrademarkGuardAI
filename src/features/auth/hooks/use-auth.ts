@@ -24,9 +24,7 @@ export function useAuth(): UseAuthReturn {
     const checkAuth = async () => {
       // Remove localStorage fallback; rely on server auth status
       const token = undefined // token handled via cookie on server side
-      const response = await fetch('/api/auth/status', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      })
+      const response = await fetch('/api/auth/status', { credentials: 'include' })
       if (response.ok) {
         const result = await response.json()
         if (result.authenticated && result.user) {
@@ -77,10 +75,10 @@ export function useAuth(): UseAuthReturn {
     
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
-      // token no longer stored in localStorage
       document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
-      router.push('/dashboard')
+      // Hard navigation ensures cookie is sent with the request to /dashboard
+      window.location.href = '/dashboard'
     }
     
     setIsLoading(false)
