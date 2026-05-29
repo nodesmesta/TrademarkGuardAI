@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEmailService } from '@/features/auth/lib/email-service';
-
-// In-memory store for PINs (email -> pin)
-export const pinStore = new Map<string, string>();
+import { pinStore } from '@/lib/pin-store';
 
 function generatePin(): string {
   // 6-digit numeric PIN

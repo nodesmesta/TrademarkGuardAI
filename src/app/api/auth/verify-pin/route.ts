@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pinStore } from '../send-pin/route';
+import { pinStore } from '../../../../lib/pin-store';
 
 export async function POST(request: NextRequest) {
   try {
