@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return { 
       success: false, 
-      message: data.error?.message || data.message || 'Failed to send PIN' 
+      message: data.error || data.message || 'Failed to send PIN' 
     }
   }
 
@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await fetch('/api/auth/verify-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email, pin }),
     })
     const data = await response.json()
@@ -67,11 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
+      // Also set cookie so middleware can read it (HttpOnly cookie is set by server via Set-Cookie header)
+      // Set a non-HttpOnly copy for client-side middleware fallback
+      document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
-      
-      
-      console.log('[useAuth] Auth successful. Token stored in localStorage.')
-      
       router.push('/dashboard')
     }
 
@@ -110,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     localStorage.removeItem('user')
     localStorage.removeItem('token')
+    // Clear cookie
+    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax'
     
     setUser(null)
     router.push('/signin')
