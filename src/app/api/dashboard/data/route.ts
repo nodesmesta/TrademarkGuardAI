@@ -61,6 +61,10 @@ function buildDashboardFromMonitoring(results: MonitoringResult[]) {
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
+  // Accept token from Authorization header or from "token" cookie
+  const cookieToken = request.cookies.get('token')?.value;
+  const tokenFromHeader = authHeader?.replace('Bearer ', '').trim();
+  const token = tokenFromHeader || cookieToken || '';
 
     if (!process.env.BRIGHTDATA_API_KEY) {
       console.error('Brightdata API key missing');
@@ -68,7 +72,7 @@ export async function GET(request: NextRequest) {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Supabase service role key missing');
     }
-  const token = authHeader?.replace('Bearer ', '').trim();
+  // token variable already defined from header or cookie
 
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
