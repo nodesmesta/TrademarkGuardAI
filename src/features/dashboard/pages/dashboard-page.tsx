@@ -11,6 +11,7 @@ import {
   dashboardData as mockDashboardData,
 } from '../components'
 import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
+import ChatBot from '../components/ChatBot'
 
 function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const sizeClasses = { sm: 'w-4 h-4 border-2', md: 'w-8 h-8 border-3', lg: 'w-12 h-12 border-4' }
@@ -182,6 +183,21 @@ function DashboardContent() {
         {stats.map((stat: any, i: number) => (
           <StatCard key={i} label={stat.label} value={stat.value} change={stat.change} changeType={stat.changeType} icon={stat.icon} />
         ))}
+      </div>
+
+      {/* AI Chatbot */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">AI Assistant</h2>
+          <ChatBot />
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center items-center text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+            <span className="text-2xl">🛡️</span>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Trademark AI</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Ask the AI assistant about trademark violations, monitoring strategies, and IP protection tips.</p>
+        </div>
       </div>
 
       {/* Products + Violations */}

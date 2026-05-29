@@ -1,11 +1,13 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/features/ui/button'
 import { cn } from '@/features/ui'
 import { useAuth } from '@/contexts/auth-context'
 import { 
-  Shield, Search, TrendingUp, AlertTriangle, Users, Globe, Settings, 
-  Menu, X, Bell, LogOut, User, ChevronDown, Home, FileText, BarChart3
+  Shield, Search, AlertTriangle, Users,
+  Settings, Menu, X, Bell, LogOut, User, ChevronDown, Home, FileText, BarChart3, Bot
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -29,15 +31,24 @@ export default function DashboardLayout({ children, className }: DashboardLayout
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const pathname = usePathname()
+
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, active: true, badge: undefined },
-    { id: 'monitoring', label: 'Monitoring', icon: Search, active: false, badge: 5 },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, active: false, badge: undefined },
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, active: false, badge: 12 },
-    { id: 'reports', label: 'Reports', icon: FileText, active: false, badge: undefined },
-    { id: 'users', label: 'Users', icon: Users, active: false, badge: undefined },
-    { id: 'settings', label: 'Settings', icon: Settings, active: false, badge: undefined },
+    // active flag will be set dynamically below
+    { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard', badge: undefined },
+    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard', badge: 5 },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard', badge: undefined },
+    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard', badge: 12 },
+    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard', badge: undefined },
+    { id: 'users', label: 'Users Data', icon: Users, href: '/dashboard/users', badge: undefined },
+    { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard', badge: undefined },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard', badge: undefined },
   ]
+
+  const navItemsWithActive = navItems.map(item => ({
+    ...item,
+    active: item.href === pathname,
+  }));
 
   const handleLogout = () => {
     logout()
@@ -98,7 +109,7 @@ export default function DashboardLayout({ children, className }: DashboardLayout
           {/* Navigation */}
           <nav className="flex-1 p-4 overflow-y-auto">
             <ul className="space-y-2">
-              {navItems.map((item) => (
+              {navItemsWithActive.map((item) => (
                 <li key={item.id}>
                   <Button
                     variant="ghost"

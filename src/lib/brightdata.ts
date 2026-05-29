@@ -1,15 +1,18 @@
 // Brightdata Scrapers Library integration for trademark monitoring
-// Uses: Google Search (gd_l7q7dkf244hwjntr0) + Amazon Search (gd_l7q7dkf244hwjntr0)
+// Working datasets:
+// - Amazon Search: gd_l7q7dkf244hwjntr0 (verified working)
+// - Google Search/Shopping: Dataset IDs need to be obtained from BrightData Dashboard
 // Docs: https://docs.brightdata.com/datasets/scrapers/scrapers-library/overview
 
 const BRIGHTDATA_API = 'https://api.brightdata.com/datasets/v3';
 const API_KEY = process.env.BRIGHTDATA_API_KEY!;
 
 // Pre-built dataset IDs from Brightdata Scrapers Library
+// Note: Update these IDs with the ones from your BrightData Dashboard
 const DATASETS = {
-  google_search: 'gd_l1vikfnt1wgvvqz95w',   // Google Search Results
-  amazon_search: 'gd_l7q7dkf244hwjntr0',    // Amazon Product Search
-  google_shopping: 'gd_lwhidru92ywb3n2hn',  // Google Shopping
+  google_search: 'gd_l1vikfnt1wgvvqz95w',   // ⚠️ Needs valid dataset ID from BrightData
+  amazon_search: 'gd_l7q7dkf244hwjntr0',    // ✅ Verified working
+  google_shopping: 'gd_lwhidru92ywb3n2hn',  // ⚠️ Needs valid dataset ID from BrightData
 };
 
 export interface ScrapeResult {
@@ -31,8 +34,24 @@ export interface MonitoringResult {
 }
 
 // Trigger async scrape — returns snapshot_id
-export async function triggerSearch(query: string, dataset: keyof typeof DATASETS = 'google_search'): Promise<string> {
+export async function triggerSearch(query: string, dataset: keyof typeof DATASETS = 'amazon_search'): Promise<string> {
   const datasetId = DATASETS[dataset];
+  
+  // Build URL based on platform
+  let searchUrl: string;
+  switch (dataset) {
+    case 'amazon_search':
+      searchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(query)}`;
+      break;
+    case 'google_shopping':
+      searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=shop`;
+      break;
+    case 'google_search':
+    default:
+      searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      break;
+  }
+
   const res = await fetch(
     `${BRIGHTDATA_API}/trigger?dataset_id=${datasetId}&format=json&uncompressed_webhook=true`,
     {
@@ -41,12 +60,20 @@ export async function triggerSearch(query: string, dataset: keyof typeof DATASET
         Authorization: `Bearer ${API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([{ keyword: query }]),
+      body: JSON.stringify([{ url: searchUrl }]),
     }
   );
 
   if (!res.ok) {
     const err = await res.text();
+    
+    // Handle specific error cases
+    if (res.status === 404) {
+      throw new Error(`Brightdata dataset not found: ${datasetId}. Please update DATASETS config with valid IDs from your BrightData Dashboard.`);
+    }
+    if (res.status === 400) {
+      throw new Error(`Brightdata trigger validation error for ${dataset}: ${err}`);
+    }
     throw new Error(`Brightdata trigger failed: ${err}`);
   }
 
@@ -68,8 +95,24 @@ export async function getSnapshot(snapshotId: string): Promise<ScrapeResult[]> {
 }
 
 // Synchronous scrape for immediate results (initial monitoring)
-export async function scrapeSync(query: string, dataset: keyof typeof DATASETS = 'google_search'): Promise<ScrapeResult[]> {
+export async function scrapeSync(query: string, dataset: keyof typeof DATASETS = 'amazon_search'): Promise<ScrapeResult[]> {
   const datasetId = DATASETS[dataset];
+  
+  // Build URL based on platform
+  let searchUrl: string;
+  switch (dataset) {
+    case 'amazon_search':
+      searchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(query)}`;
+      break;
+    case 'google_shopping':
+      searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=shop`;
+      break;
+    case 'google_search':
+    default:
+      searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      break;
+  }
+
   const res = await fetch(
     `${BRIGHTDATA_API}/scrape?dataset_id=${datasetId}&format=json`,
     {
@@ -78,12 +121,20 @@ export async function scrapeSync(query: string, dataset: keyof typeof DATASETS =
         Authorization: `Bearer ${API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify([{ keyword: query }]),
+      body: JSON.stringify([{ url: searchUrl }]),
     }
   );
 
   if (!res.ok) {
     const err = await res.text();
+    
+    // Handle specific error cases
+    if (res.status === 404) {
+      throw new Error(`Brightdata dataset not found: ${datasetId}. Please update DATASETS config with valid IDs from your BrightData Dashboard.`);
+    }
+    if (res.status === 400) {
+      throw new Error(`Brightdata scrape validation error for ${dataset}: ${err}`);
+    }
     throw new Error(`Brightdata scrape failed: ${err}`);
   }
 
