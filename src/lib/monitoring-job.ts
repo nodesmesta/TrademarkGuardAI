@@ -85,7 +85,7 @@ async function getUserEmail(userId: string): Promise<string | null> {
 export async function monitorProduct(
   product: Product,
   triggeredBy: 'cron' | 'manual' = 'cron'
-): Promise<{ violations: number; scanned: number }> {
+): Promise<{ violations: number; scanned: number; results: MonitoringResult[] }> {
   const results = await runMonitoring(product.name, product.keywords, 'sync');
 
   for (const r of results) {
@@ -114,7 +114,7 @@ export async function monitorProduct(
     }
   }
 
-  return { violations: totalViolations, scanned: totalScanned };
+  return { violations: totalViolations, scanned: totalScanned, results };
 }
 
 // ── Run monitoring for ALL active products (called by cron) ──────────────────

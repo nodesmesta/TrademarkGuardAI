@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/features/ui/button'
 import { ProtectedLayout } from '@/features/auth/components/protected-layout'
 import { useAuth } from '@/features/auth/hooks/use-auth'
+import { useRouter } from 'next/navigation'
 import {
   StatCard,
   ViolationsTable,
@@ -27,7 +28,8 @@ interface Product { id: string; name: string; description?: string; keywords: st
 function ProductsPanel({ token }: { token: string }) {
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [scanning, setScanning] = useState<string | null>(null)
+  const [scanning, setScanning] = useState<string | null>(null);
+  const router = useRouter();
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
 
   const fetchProducts = useCallback(async () => {
@@ -47,24 +49,8 @@ function ProductsPanel({ token }: { token: string }) {
     fetchProducts()
   }
 
-  const handleScan = async (id: string) => {
-    setScanning(id)
-    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning…' }))
-    try {
-      const res = await fetch(`/api/products/${id}/scan`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      setScanMsg((prev) => ({
-        ...prev,
-        [id]: data.success
-          ? `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
-          : `Error: ${data.error}`,
-      }))
-    } finally {
-      setScanning(null)
-    }
+  const handleScan = (id: string) => {
+    router.push(`/scanner?id=${id}`);
   }
 
   return (
