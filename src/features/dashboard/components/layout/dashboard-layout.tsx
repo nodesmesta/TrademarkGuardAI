@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+// Link import removed – not needed
 import { usePathname } from 'next/navigation'
 import { Button } from '@/features/ui/button'
 import { cn } from '@/features/ui'
@@ -45,7 +45,7 @@ export default function DashboardLayout({ children, className }: DashboardLayout
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
   ];
   const { stats, loading: statsLoading } = useDashboardStats();
-  const getBadge = (label) => {
+  const getBadge = (label: string): number | undefined => {
     const stat = stats?.find(s => s.label === label);
     return stat ? parseInt(stat.value, 10) : undefined;
   };

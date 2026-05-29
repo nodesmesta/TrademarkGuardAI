@@ -38,8 +38,7 @@ export default function ScannerPage() {
       setLoading(true);
       setStatus('Scanning');
         const res = await fetch(`/api/products/${productId}/scan`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          method: 'POST'
         });
         const data = await res.json();
         if (data.success) {
