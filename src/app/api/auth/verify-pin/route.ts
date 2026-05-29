@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pinStore } from '@/lib/pin-store';
 
 export async function POST(request: NextRequest) {
-// main verification handler
   try {
     const { email, pin } = await request.json();
     if (!email || !pin) {
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
     // PIN is valid, remove it
     pinStore.delete(email);
-    // Generate a placeholder token (in production replace with real JWT)
+    // Generate placeholder token (replace with real JWT in production)
     const token = Math.random().toString(36).substring(2);
     const user = { id: email, email, name: '' };
     return NextResponse.json({ success: true, user, token });

@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     console.log('[send-pin] stored PIN for', email, pin);
     const emailService = getEmailService();
     await emailService.sendPinEmail(email, pin);
+    // Return pin in response for debugging (remove in prod)
     return NextResponse.json({ success: true, message: 'PIN sent', pin });
   } catch (e) {
     console.error('[send-pin] error:', e);
