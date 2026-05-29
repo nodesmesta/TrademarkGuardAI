@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SignJWT } from 'jose';
 import { pinStore } from '@/lib/pin-store';
 
 export async function POST(request: NextRequest) {
@@ -16,8 +17,14 @@ export async function POST(request: NextRequest) {
     }
     // PIN is valid, remove it
     pinStore.delete(email);
-    // Generate placeholder token (replace with real JWT in production)
-    const token = Math.random().toString(36).substring(2);
+    // Generate a signed JWT (placeholder secret for dev)
+    const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || 'dev-secret');
+    const token = await new SignJWT({ email })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .setSubject(email)
+      .sign(jwtSecret);
     const user = { id: email, email, name: '' };
     return NextResponse.json({ success: true, user, token });
   } catch (e) {
