@@ -20,10 +20,8 @@ export default function AnalyticsClient() {
       setLoading(false);
       return;
     }
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : '';
-    fetch(`/api/products/${productId}/monitoring-results`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    // Fetch monitoring results using cookie-based auth
+    fetch(`/api/products/${productId}/monitoring-results`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.monitoringResults) && data.monitoringResults.length) {

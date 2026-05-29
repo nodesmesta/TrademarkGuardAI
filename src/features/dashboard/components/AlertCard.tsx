@@ -8,7 +8,7 @@ import {
   ChevronRightIcon 
 } from '@heroicons/react/24/outline';
 interface Alert {
-  id: number;
+  id: string;
   title: string;
   description: string;
   priority: 'critical' | 'high' | 'medium' | 'low';

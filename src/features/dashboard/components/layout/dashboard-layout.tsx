@@ -5,10 +5,11 @@ import { usePathname } from 'next/navigation'
 import { Button } from '@/features/ui/button'
 import { cn } from '@/features/ui'
 import { useAuth } from '@/contexts/auth-context'
-import { 
+import {
   Shield, Search, AlertTriangle, Users,
   Settings, Menu, X, Bell, LogOut, User, ChevronDown, Home, FileText, BarChart3, Bot
 } from 'lucide-react'
+import useDashboardStats from '@/features/dashboard/hooks/useDashboardStats'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -33,16 +34,28 @@ export default function DashboardLayout({ children, className }: DashboardLayout
 
   const pathname = usePathname()
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard', badge: undefined },
-    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard/monitoring', badge: 5 },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics', badge: undefined },
-    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard/alerts', badge: 12 },
-    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard/reports', badge: undefined },
-    { id: 'users', label: 'Users Data', icon: Users, href: '/dashboard/users', badge: undefined },
-    { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard/ai-chat', badge: undefined },
-    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings', badge: undefined },
-  ]
+  const baseNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
+    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard/monitoring' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics' },
+    { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard/alerts' },
+    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard/reports' },
+    { id: 'users', label: 'Users Data', icon: Users, href: '/dashboard/users' },
+    { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard/ai-chat' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
+  ];
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const getBadge = (label) => {
+    const stat = stats?.find(s => s.label === label);
+    return stat ? parseInt(stat.value, 10) : undefined;
+  };
+  const navItems = baseNavItems.map(item => ({
+    ...item,
+    badge: item.id === 'monitoring' ? getBadge('Total Scan')
+      : item.id === 'alerts' ? getBadge('Illegal Produk')
+      : item.id === 'users' ? getBadge('Total Produk')
+      : undefined,
+  }));
 
   const navItemsWithActive = navItems.map(item => ({
     ...item,

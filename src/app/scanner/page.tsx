@@ -33,11 +33,7 @@ export default function ScannerPage() {
 
   useEffect(() => {
     if (!productId) return;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : '';
-    if (!token) {
-      setStatus('Authentication required');
-      return;
-    }
+    // Rely on cookie-based authentication; no token needed
     const runScan = async () => {
       setLoading(true);
       setStatus('Scanning');

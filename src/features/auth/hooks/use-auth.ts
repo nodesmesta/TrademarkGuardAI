@@ -22,16 +22,8 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const storedUser = localStorage.getItem('user')
-      const storedToken = localStorage.getItem('token')
-      
-      if (storedUser && storedToken) {
-        const user = JSON.parse(storedUser)
-        setUser(user)
-        console.log('[useAuth] Using localStorage fallback for user:', user.email)
-      }
-      
-      const token = localStorage.getItem('token')
+      // Remove localStorage fallback; rely on server auth status
+      const token = undefined // token handled via cookie on server side
       const response = await fetch('/api/auth/status', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
@@ -85,7 +77,7 @@ export function useAuth(): UseAuthReturn {
     
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('token', data.token)
+      // token no longer stored in localStorage
       document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
       router.push('/dashboard')

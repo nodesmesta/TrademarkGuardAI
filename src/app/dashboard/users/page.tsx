@@ -18,10 +18,7 @@ function UsersContent() {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/auth/status', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch('/api/auth/status')
       const data = await res.json()
       if (data.user) {
         setUsers([

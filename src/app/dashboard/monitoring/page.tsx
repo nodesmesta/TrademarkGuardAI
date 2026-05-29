@@ -28,7 +28,26 @@ export default function Monitoring() {
 
   useEffect(() => {
     async function fetchData() {
-      
+      setLoading(true);
+      try {
+        const res = await fetch('/api/dashboard/data');
+        if (!res.ok) {
+          console.error('Failed to fetch monitoring data', res.status);
+          return;
+        }
+        const json = await res.json();
+        if (json.success) {
+          const data = json.data;
+          setStats(data.stats || []);
+          setScans(data.activities || []);
+        } else {
+          console.warn('Dashboard API error', json);
+        }
+      } catch (e) {
+        console.error('Error fetching monitoring data', e);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
     const interval = setInterval(fetchData, 30000);

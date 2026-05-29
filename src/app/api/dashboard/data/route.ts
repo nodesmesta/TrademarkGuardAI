@@ -22,10 +22,10 @@ function buildDashboardFromMonitoring(results: MonitoringResult[]) {
     }))
   );
 
-  const totalResults = results.reduce((s, r) => s + r.results.length, 0);
+  const totalResults = results.reduce((s, r) => s + (r.results?.length ?? 0), 0);
   const platformCounts: Record<string, number> = {};
   results.forEach(r => {
-    platformCounts[r.platform] = (platformCounts[r.platform] || 0) + r.results.length;
+    platformCounts[r.platform] = (platformCounts[r.platform] || 0) + (r.results?.length ?? 0);
   });
   const totalViolations = allViolations.length;
 
@@ -61,6 +61,13 @@ function buildDashboardFromMonitoring(results: MonitoringResult[]) {
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('Authorization');
+
+    if (!process.env.BRIGHTDATA_API_KEY) {
+      console.error('Brightdata API key missing');
+    }
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Supabase service role key missing');
+    }
   const token = authHeader?.replace('Bearer ', '').trim();
 
   if (!token) {
@@ -81,7 +88,7 @@ export async function GET(request: NextRequest) {
         stats: [
           { label: 'Total Produk', value: '0', change: '0%', changeType: 'neutral', icon: 'products' },
           { label: 'Total Scan', value: '0', change: '0%', changeType: 'neutral', icon: 'scan' },
-          { label: 'Email Dilaporkan', value: '0', change: '0%', changeType: 'neutral', icon: 'email' },
+          { label: 'Email Reported', value: '0', change: '0%', changeType: 'neutral', icon: 'email' },
           { label: 'Illegal Produk', value: '0', change: '0%', changeType: 'neutral', icon: 'illegal' },
         ],
         violations: [],
@@ -97,7 +104,7 @@ export async function GET(request: NextRequest) {
   const allResults: MonitoringResult[] = [];
   
   for (const product of products) {
-    const results = await runMonitoring(product.name, product.keywords, 'sync');
+    const results = await runMonitoring(product.name, product.keywords, 'sync', product.id, userId);
     allResults.push(...results);
   }
 
