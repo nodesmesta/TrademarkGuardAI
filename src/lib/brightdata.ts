@@ -9,7 +9,7 @@ const API_KEY = process.env.BRIGHTDATA_API_KEY!;
 
 // Pre-built dataset IDs from Brightdata Scrapers Library
 // Note: Update these IDs with the ones from your BrightData Dashboard
-const DATASETS = {
+export const DATASETS = {
   google_search: 'gd_l1vikfnt1wgvvqz95w',   // ⚠️ Needs valid dataset ID from BrightData
   amazon_search: 'gd_l7q7dkf244hwjntr0',    // ✅ Verified working
   google_shopping: 'gd_lwhidru92ywb3n2hn',  // ⚠️ Needs valid dataset ID from BrightData
@@ -156,7 +156,7 @@ export async function runMonitoring(
   keywords: string[] = [],
   mode: 'sync' | 'async' = 'async'
 ): Promise<MonitoringResult[]> {
-  const queries = [trademark, ...keywords].slice(0, 3); // max 3 queries
+  const queries = [trademark, ...keywords]; // use all provided queries
   const platforms: Array<keyof typeof DATASETS> = ['google_search', 'amazon_search', 'google_shopping'];
   const monitoringResults: MonitoringResult[] = [];
 

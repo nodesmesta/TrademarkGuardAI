@@ -23,6 +23,10 @@ function buildDashboardFromMonitoring(results: MonitoringResult[]) {
   );
 
   const totalResults = results.reduce((s, r) => s + r.results.length, 0);
+  const platformCounts: Record<string, number> = {};
+  results.forEach(r => {
+    platformCounts[r.platform] = (platformCounts[r.platform] || 0) + r.results.length;
+  });
   const totalViolations = allViolations.length;
 
   const stats = [
@@ -103,6 +107,7 @@ export async function GET(request: NextRequest) {
     success: true,
     data: {
       ...dashboardData,
+      platformCounts,
       user: { id: userId, email: userEmail, name: payload.name as string },
       source: 'brightdata',
       timestamp: new Date().toISOString(),

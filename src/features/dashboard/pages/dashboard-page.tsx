@@ -58,10 +58,8 @@ function ProductsPanel({ token }: { token: string }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      // Save result for analytics view
+      // On successful scan, redirect to analytics page with product id query param
       if (data.success) {
-        localStorage.setItem(`scanResult_${id}`, JSON.stringify(data));
-        // Redirect to analytics page with product id query param
         router.push(`/dashboard/analytics?product=${id}`);
       }
       setScanMsg((prev) => ({

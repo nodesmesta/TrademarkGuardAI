@@ -20,11 +20,23 @@ export default function AnalyticsClient() {
       setLoading(false);
       return;
     }
-    const stored = localStorage.getItem(`scanResult_${productId}`);
-    if (stored) {
-      setResult(JSON.parse(stored));
-    }
-    setLoading(false);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : '';
+    fetch(`/api/products/${productId}/monitoring-results`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.monitoringResults) && data.monitoringResults.length) {
+          const latest = data.monitoringResults[0];
+          const violations = latest.violations?.length ?? 0;
+          const scanned = latest.results?.length ?? 0;
+          setResult({ success: true, violations, scanned });
+        } else {
+          setResult({ success: false, error: data.error ?? 'No scan data' });
+        }
+      })
+      .catch((err) => setResult({ success: false, error: err.message }))
+      .finally(() => setLoading(false));
   }, [productId]);
 
   if (!productId) {
