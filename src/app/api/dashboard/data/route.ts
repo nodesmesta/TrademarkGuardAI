@@ -56,7 +56,7 @@ function buildDashboardFromMonitoring(results: MonitoringResult[]) {
     actionRequired: true,
   }));
 
-  return { stats, violations: allViolations, activities, alerts };
+  return { stats, violations: allViolations, activities, alerts, platformCounts };
 }
 
 export async function GET(request: NextRequest) {
@@ -107,7 +107,6 @@ export async function GET(request: NextRequest) {
     success: true,
     data: {
       ...dashboardData,
-      platformCounts,
       user: { id: userId, email: userEmail, name: payload.name as string },
       source: 'brightdata',
       timestamp: new Date().toISOString(),
