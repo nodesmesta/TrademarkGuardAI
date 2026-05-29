@@ -63,7 +63,11 @@ export default function useDashboardData() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const token = '';
+      const token = (() => {
+        // Try to read token from cookies (set by verify‑pin)
+        const match = document.cookie.match(/(?:^|; )token=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+      })();
       const res = await fetch('/api/dashboard/data', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

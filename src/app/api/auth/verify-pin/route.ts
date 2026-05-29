@@ -1,24 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pinStore } from '../../../../lib/pin-store';
+import { supabase } from '@/lib/supabase-client';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, pin } = await request.json();
+    const data = await request.json();
+    console.log('[verify-pin] received', data);
+    const { email, pin } = data;
     if (!email || !pin) {
       return NextResponse.json({ success: false, error: 'Email and PIN required' }, { status: 400 });
     }
-    const storedPin = pinStore.get(email);
-    if (!storedPin) {
-      return NextResponse.json({ success: false, error: 'No PIN found for this email' }, { status: 400 });
+    // Verify OTP via Supabase
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: pin,
+      type: 'email',
+    });
+    if (verifyError) {
+      const msg = verifyError.message.toLowerCase();
+      if (msg.includes('invalid') || msg.includes('expired')) {
+        return NextResponse.json({ success: false, error: 'Invalid or expired PIN' }, { status: 401 });
+      }
+      return NextResponse.json({ success: false, error: verifyError.message }, { status: 400 });
     }
-    if (storedPin !== pin) {
-      return NextResponse.json({ success: false, error: 'Invalid PIN' }, { status: 401 });
+    // Get session to obtain access token
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      return NextResponse.json({ success: false, error: 'Session creation failed' }, { status: 500 });
     }
-    // PIN is valid, remove it
-    pinStore.delete(email);
-    // Generate a simple token (not secure, placeholder)
-    const token = Math.random().toString(36).substring(2);
-    const user = { id: email, email, name: '' };
+    const user = sessionData.session.user;
+    const token = sessionData.session.access_token;
     return NextResponse.json({ success: true, user, token });
   } catch (e) {
     console.error('[verify-pin] error:', e);

@@ -14,9 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
     }
     const pin = generatePin();
-    // Store PIN temporarily (expiry not implemented for brevity)
     pinStore.set(email, pin);
-    // Send email (real or mock depending on env)
     const emailService = getEmailService();
     await emailService.sendPinEmail(email, pin);
     return NextResponse.json({ success: true, message: 'PIN sent' });
@@ -25,4 +23,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
-
