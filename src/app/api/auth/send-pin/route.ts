@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
     }
     const pin = generatePin();
-    pinStore.set(email, pin);
+    await pinStore.set(email, pin);
     console.log('[send-pin] stored PIN for', email, pin);
     const emailService = getEmailService();
     await emailService.sendPinEmail(email, pin);

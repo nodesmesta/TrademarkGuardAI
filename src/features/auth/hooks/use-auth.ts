@@ -108,7 +108,12 @@ export function useAuth(): UseAuthReturn {
   }
 
   const checkAuthStatus = async (): Promise<boolean> => {
-    const token = localStorage.getItem('token')
+    function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+  return match ? decodeURIComponent(match[2]) : null
+}
+
+const token = getCookie('token')
     const response = await fetch('/api/auth/status', {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     })

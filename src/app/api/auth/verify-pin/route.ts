@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     if (!email || !pin) {
       return NextResponse.json({ success: false, error: 'Email and PIN required' }, { status: 400 });
     }
-    const storedPin = pinStore.get(email);
+    const storedPin = await pinStore.get(email);
     if (!storedPin) {
       return NextResponse.json({ success: false, error: 'No PIN found for this email' }, { status: 400 });
     }
