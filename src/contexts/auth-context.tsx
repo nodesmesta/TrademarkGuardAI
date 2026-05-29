@@ -72,7 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Set a non-HttpOnly copy for client-side middleware fallback
       document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
-      router.push('/dashboard')
+      // Redirect after a short delay to allow state updates
+      setTimeout(() => router.push('/dashboard'), 100)
     }
 
     return data

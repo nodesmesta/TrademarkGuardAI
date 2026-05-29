@@ -15,57 +15,62 @@ function SignInContent() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const search = window.location.search || window.location.hash.substring(1);
-    const params = new URLSearchParams(search);
     
-    let accessToken = params.get('access_token') || params.get('token');
-    const refreshToken = params.get('refresh_token') || '';
-    const expiresAt = params.get('expires_at') || '';
-    const type = params.get('type') || '';
-    
-    console.log('[auth/signin] URL detected:', {
-      search: window.location.search,
-      hash: window.location.hash,
-      accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'none',
-    });
-    
-    if (accessToken) {
-      console.log('[auth/signin] Token detected, calling callback API');
-      const query = new URLSearchParams({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: expiresAt,
-        type: type,
-      }).toString();
+    const checkUrlForToken = () => {
+      const search = window.location.search || window.location.hash.substring(1);
+      const params = new URLSearchParams(search);
       
-      fetch(`/api/auth/callback?${query}`, { credentials: 'include' })
-        .then((res) => {
-          console.log('[auth/signin] Callback response status:', res.status);
-          return res.json();
-        })
-        .then((data) => {
-          console.log('[auth/signin] Callback response:', data);
-          if (data.success) {
-            const clean = window.location.origin + window.location.pathname;
-            window.history.replaceState(null, '', clean);
-            console.log('[auth/signin] Redirecting to dashboard...');
-            router.replace('/dashboard');
-          } else {
-            console.error('[auth/signin] Callback failed:', data.error);
+      let accessToken = params.get('access_token') || params.get('token');
+      const refreshToken = params.get('refresh_token') || '';
+      const expiresAt = params.get('expires_at') || '';
+      const type = params.get('type') || '';
+      
+      console.log('[auth/signin] URL detected:', {
+        search: window.location.search,
+        hash: window.location.hash,
+        accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'none',
+      });
+      
+      if (accessToken) {
+        console.log('[auth/signin] Token detected, calling callback API');
+        const query = new URLSearchParams({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: expiresAt,
+          type: type,
+        }).toString();
+        
+        fetch(`/api/auth/callback?${query}`, { credentials: 'include' })
+          .then((res) => {
+            console.log('[auth/signin] Callback response status:', res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log('[auth/signin] Callback response:', data);
+            if (data.success) {
+              const clean = window.location.origin + window.location.pathname;
+              window.history.replaceState(null, '', clean);
+              console.log('[auth/signin] Redirecting to dashboard...');
+              router.replace('/dashboard');
+            } else {
+              console.error('[auth/signin] Callback failed:', data.error);
+              setMessage({ 
+                text: `Authentication failed: ${data.error || 'Unknown error'}`, 
+                type: 'error' 
+              });
+            }
+          })
+          .catch((err) => {
+            console.error('[auth/signin] Callback error:', err);
             setMessage({ 
-              text: `Authentication failed: ${data.error || 'Unknown error'}`, 
+              text: `Authentication error: ${err.message}`, 
               type: 'error' 
             });
-          }
-        })
-        .catch((err) => {
-          console.error('[auth/signin] Callback error:', err);
-          setMessage({ 
-            text: `Authentication error: ${err.message}`, 
-            type: 'error' 
           });
-        });
-    }
+      }
+    };
+    
+    checkUrlForToken();
   }, [router]);
 
   const validateEmail = (mail: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
