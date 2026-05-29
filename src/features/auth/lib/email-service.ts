@@ -38,7 +38,6 @@ export class ResendEmailService implements IEmailService {
       } else {
         console.log(`[RESEND] PIN email sent to ${email}`)
       }
-      // Note: any additional exception handling can be added here if needed
     }
     async sendWelcomeEmail(email: string, name: string): Promise<void> {
       const { error } = await this.resend.emails.send({
@@ -67,7 +66,7 @@ export function getEmailService(): IEmailService {
   const resendApiKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'auth@nodesemesta.com'
   if (!resendApiKey) {
-    console.warn('[EMAIL SERVICE] RESEND_API_KEY not set – using mock email service (PIN will be logged).')
+    console.warn('[EMAIL SERVICE] RESEND_API_KEY not set  using mock email service (PIN will be logged).')
     class MockEmailService implements IEmailService {
       async sendPinEmail(email: string, pin: string): Promise<void> {
         console.log(`[MOCK EMAIL] PIN for ${email}: ${pin}`)

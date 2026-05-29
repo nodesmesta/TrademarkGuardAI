@@ -1,4 +1,3 @@
-// Server-side auth service for Supabase operations
 import { supabase } from '@/lib/supabase-client';
 import {
   SendPinResult,
@@ -18,9 +17,6 @@ export class AuthService implements IAuthService {
     }
     const normalized = email.toLowerCase().trim();
     const appUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-    // IMPORTANT: Must use client-side page (/signin) not API route (/api/auth/callback)
-    // because Supabase sends tokens in hash fragment (#access_token=...) which server-side
-    // API routes cannot read. The /signin page will read the hash and call the API.
     const callbackUrl = `${appUrl}/signin`;
     const { error } = await supabase.auth.signInWithOtp({
       email: normalized,

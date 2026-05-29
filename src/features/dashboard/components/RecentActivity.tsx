@@ -59,7 +59,7 @@ export default function RecentActivity({ activities, className = '' }: RecentAct
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900">{activity.action}</p>
               <p className="text-xs text-gray-600">
-                by {activity.user} • {activity.target}
+                by {activity.user}  {activity.target}
               </p>
             </div>
             <div className="text-xs text-gray-500 whitespace-nowrap">

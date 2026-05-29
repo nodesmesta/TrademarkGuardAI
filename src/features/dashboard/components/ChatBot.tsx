@@ -29,19 +29,18 @@ export default function ChatBot() {
     setInput('')
     setLoading(true)
 
-    try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [...messages, userMsg] }),
       })
-      const data = await res.json()
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply || data.error || 'No response.' }])
-    } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Failed to connect to AI. Please try again.' }])
-    } finally {
+      if (!res.ok) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Failed to connect to AI. Please try again.' }])
+      } else {
+        const data = await res.json()
+        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply || data.error || 'No response.' }])
+      }
       setLoading(false)
-    }
   }
 
   return (

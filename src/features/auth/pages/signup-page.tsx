@@ -54,7 +54,6 @@ export default function SignUpPage() {
       return
     }
 
-    // Direct signup - no PIN verification needed
     const result = await signup(email, name)
     
     if (result.success) {

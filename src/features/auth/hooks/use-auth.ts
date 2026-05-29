@@ -20,7 +20,6 @@ export function useAuth(): UseAuthReturn {
   const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
 
-  // Initial auth check on component mount
   useEffect(() => {
     const checkAuth = async () => {
       const storedUser = localStorage.getItem('user')
@@ -87,7 +86,6 @@ export function useAuth(): UseAuthReturn {
     if (data.success && data.user && data.token) {
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
-      // Also store in cookie so middleware can read it server-side
       document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       setUser(data.user)
       router.push('/dashboard')

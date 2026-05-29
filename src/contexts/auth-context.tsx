@@ -65,17 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
 
     if (data.success && data.user && data.token) {
-      // ✅ Store in localStorage only (NO COOKIES)
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
       setUser(data.user)
       
-      // ✅ NO COOKIES: Skip /api/auth/callback call
-      // Token is now stored in localStorage and used via Authorization header
       
       console.log('[useAuth] Auth successful. Token stored in localStorage.')
       
-      // ✅ Navigate immediately after successful login
       router.push('/dashboard')
     }
 
@@ -106,14 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    // Destroy Supabase session — send token so server can invalidate the correct session
     const token = localStorage.getItem('token')
     await fetch('/api/auth/logout', {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     }).catch((e) => console.error('[AuthContext] Logout request failed:', e))
     
-    // Clear localStorage
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     

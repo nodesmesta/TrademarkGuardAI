@@ -13,7 +13,6 @@ interface TrendProps {
 }
 
 export default function ViolationTrendChart({ stats }: TrendProps) {
-  // Convert value strings to numbers for simple bar scaling (fallback to 0)
   const numericStats = stats.map(s => ({
     ...s,
     numeric: parseInt(s.value.replace(/[^0-9]/g, ''), 10) || 0,

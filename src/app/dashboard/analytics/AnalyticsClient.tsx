@@ -50,9 +50,9 @@ export default function AnalyticsClient() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics – Produk {productId}</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics  Produk {productId}</h1>
       {loading ? (
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat hasil scan…</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat hasil scan</p>
       ) : result ? (
         <div className="mt-4 space-y-4">
           {result.success ? (

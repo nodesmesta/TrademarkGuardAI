@@ -51,26 +51,22 @@ function ProductsPanel({ token }: { token: string }) {
 
   const handleScan = async (id: string) => {
     setScanning(id);
-    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning…' }));
-    try {
+    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning' }));
       const res = await fetch(`/api/products/${id}/scan`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      // On successful scan, redirect to analytics page with product id query param
       if (data.success) {
         router.push(`/dashboard/analytics?product=${id}`);
       }
       setScanMsg((prev) => ({
         ...prev,
         [id]: data.success
-          ? `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
+          ? `Done  ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
           : `Error: ${data.error}`,
       }));
-    } finally {
       setScanning(null);
-    }
   }
 
   return (
@@ -112,7 +108,7 @@ function ProductsPanel({ token }: { token: string }) {
                   onClick={() => handleScan(p.id)}
                   className="text-xs"
                 >
-                  scanning === p.id ? 'Scanning…' : 'Scan Now'
+                  scanning === p.id ? 'Scanning' : 'Scan Now'
                 </Button>
                 <Button
                   size="sm"
@@ -162,7 +158,7 @@ function DashboardContent() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center"><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard…</p></div>
+        <div className="text-center"><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard</p></div>
       </div>
     )
   }
@@ -175,7 +171,7 @@ function DashboardContent() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <Button variant="outline" onClick={fetchDashboardData} disabled={loading} className="flex items-center gap-2">
-          {loading && <span className="mr-2 text-sm">Updating…</span>}
+          {loading && <span className="mr-2 text-sm">Updating</span>}
           Refresh
         </Button>
       </div>
@@ -199,7 +195,7 @@ function DashboardContent() {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center items-center text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
-            <span className="text-2xl">🛡️</span>
+            <span className="text-2xl"></span>
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Trademark AI</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ask the AI assistant about trademark violations, monitoring strategies, and IP protection tips.</p>

@@ -105,7 +105,6 @@ function SignInContent() {
         text: 'Login successful! Redirecting to dashboard...', 
         type: 'success' 
       });
-      // Router push is handled in verifyPin hook
     } else {
       setMessage({ 
         text: result.error?.message || 'Invalid PIN. Please try again.', 
@@ -231,7 +230,7 @@ function SignInContent() {
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     type="password"
-                    placeholder="••••••"
+                    placeholder=""
                     value={pin}
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, '').slice(0, 6);

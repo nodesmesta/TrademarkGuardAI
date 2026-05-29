@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Lazy singleton — only instantiated at runtime, not at build time
 let _client: SupabaseClient | null = null
 
 export function getSupabaseAdmin(): SupabaseClient {
@@ -12,7 +11,6 @@ export function getSupabaseAdmin(): SupabaseClient {
   return _client
 }
 
-// Proxy so existing imports of `supabaseAdmin.from(...)` still work
 export const supabaseAdmin = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
     return (getSupabaseAdmin() as any)[prop]

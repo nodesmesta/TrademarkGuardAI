@@ -28,30 +28,7 @@ export default function Monitoring() {
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const res = await fetch('/api/dashboard/data', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-        });
-        const json = await res.json();
-        if (json.success && json.data) {
-          const { stats, activities } = json.data;
-          setStats(stats);
-          // map activities to ScanItem shape
-          const mapped = (activities || []).map((a: any) => ({
-            id: a.id,
-            action: a.action,
-            user: a.user,
-            target: a.target,
-            timestamp: a.timestamp,
-            type: a.type,
-          }));
-          setScans(mapped);
-        }
-      } catch (e) {
-        console.error('Failed to load monitoring data', e);
-      } finally {
-        setLoading(false);
-      }
+      
     }
     fetchData();
     const interval = setInterval(fetchData, 30000);

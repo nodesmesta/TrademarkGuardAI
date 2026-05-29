@@ -34,7 +34,7 @@ export default function TestimonialsSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm font-medium mb-4">
-            ★
+            
             CUSTOMER SUCCESS
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">

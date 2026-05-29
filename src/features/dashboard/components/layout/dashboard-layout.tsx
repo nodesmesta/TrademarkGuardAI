@@ -34,7 +34,6 @@ export default function DashboardLayout({ children, className }: DashboardLayout
   const pathname = usePathname()
 
   const navItems = [
-    // active flag will be set dynamically below
     { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard', badge: undefined },
     { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard/monitoring', badge: 5 },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics', badge: undefined },

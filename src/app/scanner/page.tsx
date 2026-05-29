@@ -1,4 +1,3 @@
-// UI page for product scanning – redirects from dashboard when user clicks "Scan Now"
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -25,7 +24,6 @@ export default function ScannerPage() {
   const [details, setDetails] = useState<Array<{title?: string; url?: string; seller?: string}>>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Extract product id from query string on client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -42,8 +40,7 @@ export default function ScannerPage() {
     }
     const runScan = async () => {
       setLoading(true);
-      setStatus('Scanning…');
-      try {
+      setStatus('Scanning');
         const res = await fetch(`/api/products/${productId}/scan`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -51,18 +48,14 @@ export default function ScannerPage() {
         const data = await res.json();
         if (data.success) {
           setStatus(
-            `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
+            `Done  ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
           );
           const violations = (data.results ?? []).flatMap((r: any) => r.violations || []);
           setDetails(violations);
         } else {
           setStatus(`Error: ${data.error}`);
         }
-      } catch (e) {
-        setStatus(`Error: ${(e as Error).message}`);
-      } finally {
         setLoading(false);
-      }
     };
     runScan();
   }, [productId]);
@@ -73,7 +66,7 @@ export default function ScannerPage() {
       {loading && <Spinner size="lg" />}
       {status && <p className="text-center text-gray-800 dark:text-gray-200 mb-4">{status}</p>}
       <Button variant="ghost" onClick={() => router.push('/dashboard')}>
-        ← Back to Dashboard
+         Back to Dashboard
       </Button>
     </div>
   );

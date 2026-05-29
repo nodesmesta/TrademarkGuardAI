@@ -56,7 +56,7 @@ export default function UseCasesSection({
                 </div>
                 <p className="text-gray-400">{useCase.description}</p>
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                  <span className="text-sm text-purple-400 font-medium">View case study →</span>
+                  <span className="text-sm text-purple-400 font-medium">View case study </span>
                 </div>
               </div>
             </div>

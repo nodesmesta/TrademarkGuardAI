@@ -18,13 +18,11 @@ function UsersContent() {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
-    try {
       const token = localStorage.getItem('token')
       const res = await fetch('/api/auth/status', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       const data = await res.json()
-      // Use current user as demo data since we don't have a users list endpoint
       if (data.user) {
         setUsers([
           {
@@ -35,12 +33,10 @@ function UsersContent() {
             role: 'admin',
           },
         ])
+      } else {
+        setUsers([])
       }
-    } catch {
-      setUsers([])
-    } finally {
       setLoading(false)
-    }
   }, [])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])

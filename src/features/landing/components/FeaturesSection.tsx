@@ -68,7 +68,7 @@ export default function FeaturesSection({
                 <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
                 <p className="text-gray-400">{feature.description}</p>
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                  <span className="text-sm text-blue-400 font-medium">Learn more →</span>
+                  <span className="text-sm text-blue-400 font-medium">Learn more </span>
                 </div>
               </div>
             </div>

@@ -30,7 +30,7 @@ export default function CTASection({ className = '' }: CTASectionProps) {
           </Button>
         </div>
         <p className="text-blue-200 mt-6 text-sm">
-          No credit card required • 24/7 support • Cancel anytime
+          No credit card required  24/7 support  Cancel anytime
         </p>
       </div>
     </section>

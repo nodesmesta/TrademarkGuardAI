@@ -21,25 +21,7 @@ export function ProductRegistrationForm({ onSuccess, token }: Props) {
     setLoading(true);
     setError(null);
 
-    try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name,
-          description,
-          keywords: keywords.split(',').map((k) => k.trim()).filter(Boolean),
-        }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error ?? 'Failed to register product');
-      setName(''); setDescription(''); setKeywords('');
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    
   };
 
   return (
@@ -75,7 +57,7 @@ export function ProductRegistrationForm({ onSuccess, token }: Props) {
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-        {loading ? 'Registering…' : 'Register Product'}
+        {loading ? 'Registering' : 'Register Product'}
       </Button>
     </form>
   );

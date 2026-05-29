@@ -13,7 +13,6 @@ export function ProtectedLayout({
 }: ProtectedLayoutProps) {
   const { isLoading } = useAuth()
   
-  // Optional: show fallback while loading
   if (isLoading && fallback) {
     return <>{fallback}</>
   }

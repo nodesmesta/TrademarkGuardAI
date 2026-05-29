@@ -3,7 +3,6 @@ import { runMonitoring, MonitoringResult } from './brightdata';
 import { getAllActiveProducts, saveMonitoringResult, Product } from './products';
 import { supabaseAdmin } from './supabase-admin';
 
-// ── Email report ──────────────────────────────────────────────────────────────
 
 async function sendMonitoringReport(
   email: string,
@@ -27,7 +26,7 @@ async function sendMonitoringReport(
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto">
-      <h2 style="color:#1d4ed8">TradeGuard — Monitoring Report</h2>
+      <h2 style="color:#1d4ed8">TradeGuard  Monitoring Report</h2>
       <p>Autonomous monitoring completed for <strong>${productName}</strong>.</p>
       <table style="width:100%;border-collapse:collapse;margin:12px 0">
         <tr><td style="padding:6px"><strong>Total results scanned</strong></td><td>${totalScanned}</td></tr>
@@ -37,7 +36,7 @@ async function sendMonitoringReport(
       </table>
       ${
         violations.length > 0
-          ? `<h3 style="color:#dc2626">⚠️ Violations Found</h3>
+          ? `<h3 style="color:#dc2626"> Violations Found</h3>
              <table style="width:100%;border-collapse:collapse">
                <thead><tr style="background:#f3f4f6">
                  <th style="padding:8px;border:1px solid #ddd;text-align:left">Title</th>
@@ -46,7 +45,7 @@ async function sendMonitoringReport(
                </tr></thead>
                <tbody>${violationRows}</tbody>
              </table>`
-          : `<p style="color:#16a34a">✅ No violations detected. Your trademark appears safe.</p>`
+          : `<p style="color:#16a34a"> No violations detected. Your trademark appears safe.</p>`
       }
       <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb"/>
       <small style="color:#6b7280">This is an automated report from TradeGuard AI. Powered by Brightdata.</small>
@@ -54,7 +53,7 @@ async function sendMonitoringReport(
 
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) {
-    console.warn('[monitoring-job] RESEND_API_KEY not set — skipping email');
+    console.warn('[monitoring-job] RESEND_API_KEY not set  skipping email');
     return;
   }
 
@@ -65,7 +64,7 @@ async function sendMonitoringReport(
   const { error } = await resend.emails.send({
     from,
     to: email,
-    subject: `TradeGuard Report: ${productName} — ${violations.length} violation(s) found`,
+    subject: `TradeGuard Report: ${productName}  ${violations.length} violation(s) found`,
     html,
   });
 
@@ -73,14 +72,12 @@ async function sendMonitoringReport(
   else console.log(`[monitoring-job] Report sent to ${email} for "${productName}"`);
 }
 
-// ── Get user email from Supabase auth ────────────────────────────────────────
 
 async function getUserEmail(userId: string): Promise<string | null> {
   const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
   return data?.user?.email ?? null;
 }
 
-// ── Run monitoring for a single product ──────────────────────────────────────
 
 export async function monitorProduct(
   product: Product,
@@ -104,7 +101,6 @@ export async function monitorProduct(
   const totalViolations = results.reduce((s, r) => s + r.violations.length, 0);
   const totalScanned = results.reduce((s, r) => s + r.results.length, 0);
 
-  // Send email report if violations found OR it's a cron run
   if (triggeredBy === 'cron' || totalViolations > 0) {
     const email = await getUserEmail(product.user_id);
     if (email) {
@@ -117,7 +113,6 @@ export async function monitorProduct(
   return { violations: totalViolations, scanned: totalScanned, results };
 }
 
-// ── Run monitoring for ALL active products (called by cron) ──────────────────
 
 export async function runAllMonitoring(): Promise<{
   processed: number;
@@ -130,11 +125,11 @@ export async function runAllMonitoring(): Promise<{
 
   for (const product of products) {
     try {
-      const { violations } = await monitorProduct(product, 'cron');
-      totalViolations += violations;
-    } catch (err) {
-      console.error(`[monitoring-job] Failed for product ${product.id}:`, err);
+      const result = await monitorProduct(product, 'cron');
+      totalViolations += result.violations;
+    } catch (e) {
       errors++;
+      console.error('[monitoring-job] monitorProduct error:', e);
     }
   }
 

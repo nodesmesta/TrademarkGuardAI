@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-// POST /api/auth/signup
 export async function POST(request: NextRequest) {
   const { email, name } = await request.json();
   const normalizedEmail = email.toLowerCase().trim();
 
-  // Try to create user directly
-  // Supabase will return error if email already exists
   const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email: normalizedEmail,
     email_confirm: true,
@@ -15,7 +12,6 @@ export async function POST(request: NextRequest) {
   });
 
   if (createError) {
-    // Check if error is due to duplicate email
     if (createError.message.includes('already registered') || createError.message.includes('duplicate')) {
       return NextResponse.json({ 
         success: false, 
@@ -23,7 +19,6 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
     
-    // Return other errors
     return NextResponse.json({ 
       success: false, 
       error: { code: 'CREATE_ERROR', message: createError.message } 
