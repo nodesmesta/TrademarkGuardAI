@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pinStore } from '@/lib/pin-store';
 
 export async function POST(request: NextRequest) {
+// main verification handler
   try {
     const { email, pin } = await request.json();
     if (!email || !pin) {

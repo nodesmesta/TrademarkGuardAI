@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
     }
     const pin = generatePin();
     pinStore.set(email, pin);
+    console.log('[send-pin] stored PIN for', email, pin);
     const emailService = getEmailService();
     await emailService.sendPinEmail(email, pin);
-    return NextResponse.json({ success: true, message: 'PIN sent' });
+    return NextResponse.json({ success: true, message: 'PIN sent', pin });
   } catch (e) {
     console.error('[send-pin] error:', e);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
