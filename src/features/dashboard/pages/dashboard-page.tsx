@@ -26,6 +26,7 @@ function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 interface Product { id: string; name: string; description?: string; keywords: string[]; active: boolean; created_at: string }
 
 function ProductsPanel({ token }: { token: string }) {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
   const [scanning, setScanning] = useState<string | null>(null);
