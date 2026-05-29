@@ -19,12 +19,14 @@ export async function POST(request: NextRequest) {
     pinStore.delete(email);
     // Generate a signed JWT (placeholder secret for dev)
     const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || 'dev-secret');
-    const token = await new SignJWT({ email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .setSubject(email)
-      .sign(jwtSecret);
+    const { randomUUID } = await import('crypto');
+      const userId = randomUUID();
+      const token = await new SignJWT({ email })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('2h')
+        .setSubject(userId)
+        .sign(jwtSecret);
     const user = { id: email, email, name: '' };
     return NextResponse.json({ success: true, user, token });
   } catch (e) {

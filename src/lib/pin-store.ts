@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase-client';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const fallbackMap = new Map<string, string>();
 
@@ -6,12 +6,14 @@ export const pinStore = {
   async set(email: string, pin: string) {
     // Upsert the PIN for the email and cache locally
     try {
-      await supabase.from('auth_pins').upsert({ email, pin });
+      await supabaseAdmin.from('auth_pins').upsert({ email, pin });
     } catch (e) {
-      console.error('[pinStore] supabase upsert error:', e);
+      console.error('[pinStore] supabaseAdmin upsert error:', e);
     }
     // Always cache in memory so verification works even if DB write fails
     fallbackMap.set(email, pin);
+      console.log('[pinStore] fallbackMap size after set:', fallbackMap.size);
+      console.log('[pinStore] fallbackMap entry:', email, fallbackMap.get(email));
   },
   async get(email: string): Promise<string | null> {
     // First try the in‑memory cache
@@ -19,7 +21,7 @@ export const pinStore = {
       return fallbackMap.get(email) ?? null;
     }
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('auth_pins')
         .select('pin')
         .eq('email', email)
@@ -36,6 +38,6 @@ export const pinStore = {
     }
   },
   async delete(email: string) {
-    await supabase.from('auth_pins').delete().eq('email', email);
+    await supabaseAdmin.from('auth_pins').delete().eq('email', email);
   },
 };

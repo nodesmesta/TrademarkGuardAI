@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET);
+  const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || 'dev-secret');
   let userId: string;
 let userEmail: string;
 try {
@@ -86,10 +86,8 @@ try {
   userId = payload.sub as string;
   userEmail = payload.email as string;
 } catch (e) {
-  // Fall back: treat token as plain email identifier (your placeholder token)
-  console.warn('[dashboard/data] JWT verification failed, using token as email fallback');
-  userId = token; // using token string as id
-  userEmail = token;
+  console.warn('[dashboard/data] JWT verification failed:', e);
+  return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 }
 
   const products = await getProductsByUser(userId);
