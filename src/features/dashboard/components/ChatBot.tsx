@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2 } from 'lucide-react'
+import { Send, Bot, User, Loader2, Paperclip, X } from 'lucide-react'
 import { Button } from '@/features/ui/button'
 
 interface Message {
@@ -8,55 +8,97 @@ interface Message {
   content: string
 }
 
+async function extractPdfText(file: File): Promise<string> {
+  const pdfjsLib = await import('pdfjs-dist')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+  const buf = await file.arrayBuffer()
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise
+  const pages: string[] = []
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i)
+    const content = await page.getTextContent()
+    pages.push(content.items.map((item: unknown) => (item as { str?: string }).str || '').join(' '))
+  }
+  return pages.join('\n')
+}
+
 export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Hi! I\'m your TradeGuard AI assistant. Ask me anything about trademark protection, monitoring, or violations.' }
+    { role: 'assistant', content: 'Hi! I\'m your TradeGuard AI assistant. I can help you manage products, monitor trademarks, and extract info from PDFs. Try: "Add product Nike Shoes with keywords nike, shoes on instagram and google"' }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [pdfText, setPdfText] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || file.type !== 'application/pdf') return
+    setPdfFile(file)
+    setLoading(true)
+    try {
+      const text = await extractPdfText(file)
+      setPdfText(text)
+      setMessages(prev => [...prev, { role: 'assistant', content: `📄 PDF "${file.name}" loaded (${Math.round(text.length / 1000)}k chars). You can now ask me to extract products from it or ask questions about its content.` }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to parse PDF. Please try another file.' }])
+      setPdfFile(null)
+    }
+    setLoading(false)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   const sendMessage = async () => {
     const text = input.trim()
     if (!text || loading) return
 
     const userMsg: Message = { role: 'user', content: text }
-    setMessages((prev) => [...prev, userMsg])
+    setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
+    try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMsg] }),
+        body: JSON.stringify({
+          messages: [...messages, userMsg],
+          ...(pdfText && { pdfText }),
+        }),
       })
-      if (!res.ok) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Failed to connect to AI. Please try again.' }])
-      } else {
-        const data = await res.json()
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply || data.error || 'No response.' }])
-      }
-      setLoading(false)
+      const data = await res.json()
+      setMessages(prev => [...prev, { role: 'assistant', content: data.reply || data.error || 'No response.' }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to connect. Please try again.' }])
+    }
+    setLoading(false)
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col h-[480px]">
-      {/* Header */}
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col h-[520px]">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
           <Bot className="w-4 h-4 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <p className="font-semibold text-gray-900 dark:text-white text-sm">AI Assistant</p>
-          <p className="text-xs text-green-500">Online</p>
+          <p className="text-xs text-green-500">Online • Agentic Mode</p>
         </div>
+        {pdfFile && (
+          <div className="flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+            <Paperclip className="w-3 h-3" />
+            <span className="max-w-[100px] truncate">{pdfFile.name}</span>
+            <button onClick={() => { setPdfFile(null); setPdfText(null) }}><X className="w-3 h-3" /></button>
+          </div>
+        )}
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -65,7 +107,7 @@ export default function ChatBot() {
                 <Bot className="w-3.5 h-3.5 text-white" />
               </div>
             )}
-            <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
+            <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
               msg.role === 'user'
                 ? 'bg-blue-600 text-white rounded-br-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm'
@@ -92,14 +134,28 @@ export default function ChatBot() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+          title="Upload PDF"
+          disabled={loading}
+        >
+          <Paperclip className="w-4 h-4" />
+        </button>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Ask about trademark protection..."
+          placeholder="Ask to add/edit/delete products, or upload a PDF..."
           className="flex-1 text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={loading}
         />
