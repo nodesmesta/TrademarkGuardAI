@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserId } from '@/lib/auth';
+
+export const maxDuration = 60;
 import { getProductsByUser, createProduct, deleteProduct } from '@/lib/products';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { monitorProduct } from '@/lib/monitoring-job';

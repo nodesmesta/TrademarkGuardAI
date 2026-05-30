@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSnapshot } from '@/lib/brightdata';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: snapshotId } = await params;
+  if (!snapshotId) return NextResponse.json({ error: 'Snapshot ID required' }, { status: 400 });
 
-  if (!snapshotId) {
-    return NextResponse.json({ error: 'Snapshot ID required' }, { status: 400 });
-  }
+  // Fetch directly from BrightData API
+  const res = await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snapshotId}?format=json`, {
+    headers: { Authorization: `Bearer ${process.env.BRIGHTDATA_API_KEY}` },
+  });
 
-  try {
-    const results = await getSnapshot(snapshotId, { maxRetries: 3, intervalMs: 2000 });
-    return NextResponse.json({ success: true, snapshot_id: snapshotId, count: results.length, results });
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
-  }
+  if (res.status === 202) return NextResponse.json({ success: false, status: 'processing' }, { status: 202 });
+  if (!res.ok) return NextResponse.json({ error: 'Snapshot not found' }, { status: 404 });
+
+  const results = await res.json();
+  return NextResponse.json({ success: true, snapshot_id: snapshotId, count: results.length, results });
 }
