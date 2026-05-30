@@ -6,10 +6,10 @@ import { Label } from '@/features/ui/label';
 
 interface Props {
   onSuccess: () => void;
-  token: string;
+  token?: string;
 }
 
-export function ProductRegistrationForm({ onSuccess, token }: Props) {
+export function ProductRegistrationForm({ onSuccess }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [keywords, setKeywords] = useState('');
@@ -21,43 +21,45 @@ export function ProductRegistrationForm({ onSuccess, token }: Props) {
     setLoading(true);
     setError(null);
 
-    
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        description,
+        keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
+        platforms: ['google', 'amazon', 'instagram', 'tiktok'],
+      }),
+    });
+    const data = await res.json();
+    setLoading(false);
+
+    if (data.success) {
+      setName(''); setDescription(''); setKeywords('');
+      onSuccess();
+    } else {
+      setError(data.error ?? 'Failed to register product');
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="prod-name">Brand / Trademark Name *</Label>
-        <Input
-          id="prod-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Nike, Apple, MyBrand"
-          required
-          minLength={2}
-        />
+        <Input id="prod-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Nike, Apple, MyBrand" required minLength={2} />
       </div>
       <div>
         <Label htmlFor="prod-desc">Description</Label>
-        <Input
-          id="prod-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Short description of your product/brand"
-        />
+        <Input id="prod-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description of your product/brand" />
       </div>
       <div>
         <Label htmlFor="prod-kw">Keywords (comma-separated)</Label>
-        <Input
-          id="prod-kw"
-          value={keywords}
-          onChange={(e) => setKeywords(e.target.value)}
-          placeholder="e.g. fake nike, counterfeit shoes"
-        />
+        <Input id="prod-kw" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="e.g. fake nike, counterfeit shoes" />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-        {loading ? 'Registering' : 'Register Product'}
+        {loading ? 'Registering...' : 'Register Product'}
       </Button>
     </form>
   );

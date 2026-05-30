@@ -17,7 +17,7 @@ import type { DashboardData } from '../components/types'
 
 interface Product { id: string; name: string; description?: string; keywords: string[]; active: boolean; created_at: string }
 
-function ProductsPanel({ token }: { token: string }) {
+function ProductsPanel() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -25,10 +25,10 @@ function ProductsPanel({ token }: { token: string }) {
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
 
   const fetchProducts = useCallback(async () => {
-    const res = await fetch('/api/products', { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch('/api/products', { credentials: 'include' })
     const data = await res.json()
     if (data.success) setProducts(data.products)
-  }, [token])
+  }, [])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
@@ -36,7 +36,7 @@ function ProductsPanel({ token }: { token: string }) {
     await fetch('/api/products', {
       method: 'DELETE',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
     fetchProducts()
@@ -48,7 +48,6 @@ function ProductsPanel({ token }: { token: string }) {
     const res = await fetch(`/api/products/${id}/scan`, {
       method: 'POST',
       credentials: 'include',
-      headers: { Authorization: `Bearer ${token}` },
     })
     const data = await res.json()
     if (data.success) router.push(`/dashboard/analytics?product=${id}`)
@@ -72,7 +71,7 @@ function ProductsPanel({ token }: { token: string }) {
 
       {showForm && (
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <ProductRegistrationForm token={token} onSuccess={() => { setShowForm(false); fetchProducts() }} />
+          <ProductRegistrationForm onSuccess={() => { setShowForm(false); fetchProducts() }} />
         </div>
       )}
 
@@ -108,18 +107,11 @@ function DashboardContent() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [token, setToken] = useState('')
-
-  useEffect(() => {
-    setToken(localStorage.getItem('token') ?? '')
-  }, [])
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true)
-    const t = localStorage.getItem('token')
     const response = await fetch('/api/dashboard/data', {
       credentials: 'include',
-      headers: t ? { Authorization: `Bearer ${t}` } : {},
     })
     if (!response.ok) {
       setError(response.status === 401 ? 'Authentication required.' : `Error: ${response.statusText}`)
@@ -187,7 +179,7 @@ function DashboardContent() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-8">
           <ViolationsTable violations={violations} />
-          {token && <ProductsPanel token={token} />}
+          {<ProductsPanel />}
         </div>
         <div className="space-y-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
