@@ -18,7 +18,7 @@ interface Product { id: string; name: string; description?: string; keywords: st
 
 function AlertsPanel({ alerts }: { alerts: any[] }) {
   const [page, setPage] = useState(1)
-  const perPage = 5
+  const perPage = 4
   const totalPages = Math.ceil(alerts.length / perPage)
   const paginated = alerts.slice((page - 1) * perPage, page * perPage)
 
@@ -60,7 +60,7 @@ function ProductsPanel() {
   const [scanning, setScanning] = useState<string | null>(null)
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
   const [page, setPage] = useState(1)
-  const perPage = 5
+  const perPage = 4
   const fetchProducts = useCallback(async () => {
     const res = await fetch('/api/products', { credentials: 'include' })
     const data = await res.json()
