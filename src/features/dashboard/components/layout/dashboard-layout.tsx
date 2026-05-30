@@ -32,11 +32,11 @@ export default function DashboardLayout({ children, className }: DashboardLayout
 
   const baseNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
-    { id: 'monitoring', label: 'Monitoring', icon: Search, href: '/dashboard/monitoring' },
+    { id: 'monitoring', label: 'Datasheet', icon: Search, href: '/dashboard/monitoring' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics' },
     { id: 'alerts', label: 'Alerts', icon: AlertTriangle, href: '/dashboard/alerts' },
-    { id: 'reports', label: 'Reports', icon: FileText, href: '/dashboard/reports' },
-    { id: 'users', label: 'Users Data', icon: Users, href: '/dashboard/users' },
+    { id: 'reports', label: 'Scan Results', icon: FileText, href: '/dashboard/reports' },
+    { id: 'users', label: 'Users', icon: Users, href: '/dashboard/users' },
     { id: 'ai-chat', label: 'AI Chat', icon: Bot, href: '/dashboard/ai-chat' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
   ]
