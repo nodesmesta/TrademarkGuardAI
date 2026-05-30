@@ -1,73 +1,62 @@
 'use client';
-import { Card } from '@/features/ui/card';
-import { Button } from '@/features/ui/button';
-import { 
-  CheckCircleIcon, 
-  XCircleIcon, 
-  BellIcon, 
-  ShieldCheckIcon,
-  ClockIcon 
-} from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { CheckCircle, XCircle, Bell, Shield, Clock } from 'lucide-react';
+
 interface ActivityItem {
-  id: number;
+  id: number | string;
   action: string;
   user: string;
   target: string;
   timestamp: string;
   type: 'success' | 'error' | 'warning' | 'info';
 }
-interface RecentActivityProps {
-  activities: ActivityItem[];
-  className?: string;
-}
-export default function RecentActivity({ activities, className = '' }: RecentActivityProps) {
-  const getTypeIcon = (type: string) => {
-    switch(type) {
-      case 'success': return <CheckCircleIcon className="w-5 h-5 text-success-600" />;
-      case 'error': return <XCircleIcon className="w-5 h-5 text-danger-600" />;
-      case 'warning': return <BellIcon className="w-5 h-5 text-warning-600" />;
-      case 'info': return <ShieldCheckIcon className="w-5 h-5 text-primary-600" />;
-      default: return <ClockIcon className="w-5 h-5 text-gray-600" />;
-    }
-  };
-  const getTypeColor = (type: string) => {
-    switch(type) {
-      case 'success': return 'bg-success-50';
-      case 'error': return 'bg-danger-50';
-      case 'warning': return 'bg-warning-50';
-      case 'info': return 'bg-primary-50';
-      default: return 'bg-gray-50';
-    }
-  };
+
+const TYPE_CONFIG: Record<string, { icon: React.ReactNode; bg: string }> = {
+  success: { icon: <CheckCircle className="w-4 h-4 text-green-600" />, bg: 'bg-green-50 dark:bg-green-900/20' },
+  error: { icon: <XCircle className="w-4 h-4 text-red-600" />, bg: 'bg-red-50 dark:bg-red-900/20' },
+  warning: { icon: <Bell className="w-4 h-4 text-orange-600" />, bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  info: { icon: <Shield className="w-4 h-4 text-blue-600" />, bg: 'bg-blue-50 dark:bg-blue-900/20' },
+};
+
+export default function RecentActivity({ activities, className = '' }: { activities: ActivityItem[]; className?: string }) {
+  const [page, setPage] = useState(1);
+  const perPage = 5;
+  const totalPages = Math.ceil(activities.length / perPage);
+  const paginated = activities.slice((page - 1) * perPage, page * perPage);
+
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>
-          <p className="text-sm text-gray-600">Latest system and user activities</p>
-        </div>
-        <Button variant="ghost" size="sm" className="text-primary-600 hover:text-primary-800">
-          View All
-        </Button>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h2>
+        <span className="text-xs text-gray-500">{activities.length} events</span>
       </div>
-      <div className="space-y-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-start gap-3">
-            <div className={`p-2 rounded-lg ${getTypeColor(activity.type)}`}>
-              {getTypeIcon(activity.type)}
+      <div className="space-y-3">
+        {paginated.map((a) => {
+          const config = TYPE_CONFIG[a.type] ?? TYPE_CONFIG.info;
+          return (
+            <div key={a.id} className="flex items-start gap-3">
+              <div className={`p-2 rounded-lg shrink-0 ${config.bg}`}>{config.icon}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{a.action}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{a.target}</p>
+              </div>
+              <span className="text-xs text-gray-400 whitespace-nowrap">{a.timestamp}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-              <p className="text-xs text-gray-600">
-                by {activity.user}  {activity.target}
-              </p>
-            </div>
-            <div className="text-xs text-gray-500 whitespace-nowrap">
-              {activity.timestamp}
-            </div>
+          );
+        })}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500">Page {page}/{totalPages}</p>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} onClick={() => setPage(p)} className={`w-7 h-7 rounded-lg text-xs font-medium transition-all ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}>
+                {p}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

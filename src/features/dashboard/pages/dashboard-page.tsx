@@ -17,6 +17,43 @@ import type { DashboardData } from '../components/types'
 
 interface Product { id: string; name: string; description?: string; keywords: string[]; active: boolean; created_at: string }
 
+function AlertsPanel({ alerts }: { alerts: any[] }) {
+  const [page, setPage] = useState(1)
+  const perPage = 3
+  const totalPages = Math.ceil(alerts.length / perPage)
+  const paginated = alerts.slice((page - 1) * perPage, page * perPage)
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">High Priority Alerts</h2>
+        <span className="text-xs text-gray-500">{alerts.length} alerts</span>
+      </div>
+      {alerts.length === 0 ? (
+        <p className="text-sm text-gray-500">No alerts at this time.</p>
+      ) : (
+        <>
+          <div className="space-y-3">
+            {paginated.map((alert: any) => <AlertCard key={alert.id} alert={alert} />)}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500">Page {page}/{totalPages}</p>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button key={p} onClick={() => setPage(p)} className={`w-7 h-7 rounded-lg text-xs font-medium transition-all ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  )
+}
+
 function ProductsPanel() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
@@ -196,12 +233,7 @@ function DashboardContent() {
           <ViolationsTable violations={violations} />
         </div>
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">High Priority Alerts</h2>
-          <div className="space-y-3">
-            {alerts.length > 0
-              ? alerts.map((alert) => <AlertCard key={alert.id} alert={alert as any} />)
-              : <p className="text-sm text-gray-500">No alerts at this time.</p>}
-          </div>
+          <AlertsPanel alerts={alerts} />
         </div>
       </div>
 
