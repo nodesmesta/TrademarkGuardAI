@@ -1,12 +1,7 @@
 'use client';
-import { Card } from '@/features/ui/card';
-import { Button } from '@/features/ui/button';
-import { 
-  ExclamationTriangleIcon,
-  ShieldCheckIcon,
-  ClockIcon,
-  ChevronRightIcon 
-} from '@heroicons/react/24/outline';
+import { Card, cn } from '@/features/ui';
+import { AlertTriangle, Shield, Clock, ChevronRight } from 'lucide-react';
+
 interface Alert {
   id: string;
   title: string;
@@ -15,86 +10,51 @@ interface Alert {
   timestamp: string;
   actionRequired: boolean;
 }
-interface AlertCardProps {
-  alert: Alert;
-  className?: string;
-}
-export default function AlertCard({ alert, className = '' }: AlertCardProps) {
-  const getPriorityIcon = (priority: string) => {
-    switch(priority) {
-      case 'critical': return <ExclamationTriangleIcon className="w-5 h-5" />;
-      case 'high': return <ExclamationTriangleIcon className="w-5 h-5" />;
-      case 'medium': return <ShieldCheckIcon className="w-5 h-5" />;
-      case 'low': return <ClockIcon className="w-5 h-5" />;
-      default: return <ExclamationTriangleIcon className="w-5 h-5" />;
-    }
-  };
-  const getPriorityClasses = (priority: string) => {
-    switch(priority) {
-      case 'critical': return {
-        iconBg: 'bg-danger-50',
-        iconText: 'text-danger-600',
-        badgeBg: 'bg-danger-100',
-        badgeText: 'text-danger-800'
-      };
-      case 'high': return {
-        iconBg: 'bg-warning-50',
-        iconText: 'text-warning-600',
-        badgeBg: 'bg-warning-100',
-        badgeText: 'text-warning-800'
-      };
-      case 'medium': return {
-        iconBg: 'bg-primary-50',
-        iconText: 'text-primary-600',
-        badgeBg: 'bg-primary-100',
-        badgeText: 'text-primary-800'
-      };
-      case 'low': return {
-        iconBg: 'bg-success-50',
-        iconText: 'text-success-600',
-        badgeBg: 'bg-success-100',
-        badgeText: 'text-success-800'
-      };
-      default: return {
-        iconBg: 'bg-gray-50',
-        iconText: 'text-gray-600',
-        badgeBg: 'bg-gray-100',
-        badgeText: 'text-gray-800'
-      };
-    }
-  };
-  const priorityClasses = getPriorityClasses(alert.priority);
+
+const PRIORITY_CONFIG: Record<string, { icon: React.ReactNode; gradient: string; badge: string; bg: string }> = {
+  critical: { icon: <AlertTriangle className="w-5 h-5" />, gradient: 'from-red-500 to-red-600', badge: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', bg: 'bg-red-500' },
+  high: { icon: <AlertTriangle className="w-5 h-5" />, gradient: 'from-orange-500 to-orange-600', badge: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300', bg: 'bg-orange-500' },
+  medium: { icon: <Shield className="w-5 h-5" />, gradient: 'from-yellow-500 to-yellow-600', badge: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', bg: 'bg-yellow-500' },
+  low: { icon: <Clock className="w-5 h-5" />, gradient: 'from-green-500 to-green-600', badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', bg: 'bg-green-500' },
+};
+
+export default function AlertCard({ alert, className = '' }: { alert: Alert; className?: string }) {
+  const config = PRIORITY_CONFIG[alert.priority] ?? PRIORITY_CONFIG.medium;
+
   return (
-    <Card className={`p-5 ${className}`}>
-      <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-xl ${priorityClasses.iconBg} ${priorityClasses.iconText}`}>
-          {getPriorityIcon(alert.priority)}
+    <Card className={cn(
+      "relative overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl",
+      "border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-lg",
+      "hover:shadow-xl transition-all duration-300 p-5",
+      className
+    )}>
+      <div className={cn("absolute top-0 right-0 w-32 h-32 opacity-5 blur-2xl", config.bg)} />
+      <div className="relative flex items-start gap-4">
+        <div className={cn("p-3 rounded-xl shadow-lg bg-gradient-to-br text-white shrink-0", config.gradient)}>
+          {config.icon}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{alert.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
-            </div>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityClasses.badgeBg} ${priorityClasses.badgeText} ml-2`}>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{alert.title}</h3>
+            <span className={cn("px-2.5 py-0.5 rounded-lg text-xs font-semibold shrink-0", config.badge)}>
               {alert.priority}
             </span>
           </div>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center text-sm text-gray-500">
-              <ClockIcon className="w-4 h-4 mr-1" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{alert.description}</p>
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+              <Clock className="w-3.5 h-3.5" />
               {alert.timestamp}
             </div>
             <div className="flex items-center gap-2">
               {alert.actionRequired && (
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-danger-100 text-danger-800">
+                <span className="px-2 py-0.5 rounded-lg text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">
                   Action Required
                 </span>
               )}
-              <Button size="sm" variant="ghost">
-                Details
-                <ChevronRightIcon className="w-4 h-4 ml-1" />
-              </Button>
+              <button className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700">
+                Details <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
