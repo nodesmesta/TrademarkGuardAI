@@ -118,13 +118,14 @@ async function executeTool(name: string, args: Record<string, unknown>, userId: 
       const product = await createProduct(userId, args as { name: string; description?: string; keywords?: string[]; platforms?: string[] });
       // Create Triggerware trigger for ongoing monitoring
       const triggerDesc = `Monitor trademark violations for "${product.name}" across e-commerce and social media platforms`;
-      await tw.createTrigger(triggerDesc, `trademark-${product.id}`).catch(e => console.error('[chat] triggerware create failed:', e));
-      return `Product "${product.name}" created (ID: ${product.id}), Triggerware trigger activated.`;
+      tw.createTrigger(triggerDesc, `trademark-${product.id}`).catch(e => console.error('[chat] triggerware create failed:', e));
+      // Fire-and-forget scan
+      monitorProduct(product, 'manual').catch(e => console.error(`[chat] scan failed for ${product.name}:`, e));
+      return `Product "${product.name}" created (ID: ${product.id}), Triggerware trigger activated, scan started.`;
     }
     case 'add_products_from_pdf': {
       const { products } = args as { products: { name: string; description?: string; keywords?: string[]; platforms?: string[] }[] };
       const created: { id: string; name: string }[] = [];
-      const scanResults: { name: string; violations: number; scanned: number }[] = [];
 
       for (const p of products) {
         try {
@@ -133,24 +134,26 @@ async function executeTool(name: string, args: Record<string, unknown>, userId: 
 
           // Create Triggerware trigger
           const triggerDesc = `Monitor trademark violations for "${product.name}" on ${(p.platforms || ['google', 'amazon']).join(', ')}`;
-          await tw.createTrigger(triggerDesc, `trademark-${product.id}`).catch(e => console.error('[chat] triggerware create failed:', e));
-
-          // Run initial scan
-          const scanResult = await monitorProduct(product, 'manual').catch(e => {
-            console.error(`[chat] initial scan failed for ${product.name}:`, e);
-            return { violations: 0, scanned: 0, results: [] };
-          });
-          scanResults.push({ name: product.name, violations: scanResult.violations, scanned: scanResult.scanned });
+          tw.createTrigger(triggerDesc, `trademark-${product.id}`).catch(e => console.error('[chat] triggerware create failed:', e));
         } catch (e) {
           console.error(`[chat] add product "${p.name}" failed:`, e);
         }
       }
 
+      // Fire-and-forget: run scans in background (avoids 504 timeout)
+      if (created.length > 0) {
+        const scanProducts = created.map(c => ({ ...c }));
+        Promise.resolve().then(async () => {
+          for (const c of scanProducts) {
+            const { data: prod } = await supabaseAdmin.from('products').select('*').eq('id', c.id).single();
+            if (prod) await monitorProduct(prod, 'manual').catch(e => console.error(`[chat] scan failed for ${c.name}:`, e));
+          }
+        });
+      }
+
       return JSON.stringify({
-        message: `${created.length} products added, Triggerware triggers created, initial scans completed.`,
+        message: `${created.length} products added, Triggerware triggers created, scans started in background.`,
         products: created,
-        scans: scanResults,
-        totalViolations: scanResults.reduce((s, r) => s + r.violations, 0),
       });
     }
     case 'update_product': {
@@ -227,12 +230,24 @@ Available actions: list_products, add_product, add_products_from_pdf, update_pro
 
   // Execute tool calls
   const toolMessages = [];
+  let redirectProductId: string | null = null;
   for (const tc of choice.tool_calls) {
     const args = JSON.parse(tc.function.arguments);
     const result = userId
       ? await executeTool(tc.function.name, args, userId)
       : 'Error: Not authenticated. Please log in.';
     toolMessages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+
+    // Capture first product ID for redirect
+    if ((tc.function.name === 'add_products_from_pdf' || tc.function.name === 'add_product') && userId) {
+      try {
+        const parsed = JSON.parse(result);
+        if (parsed.products?.[0]?.id) redirectProductId = parsed.products[0].id;
+      } catch {
+        const match = result.match(/ID: ([a-f0-9-]+)/);
+        if (match) redirectProductId = match[1];
+      }
+    }
   }
 
   // Second call with tool results
@@ -276,8 +291,8 @@ Available actions: list_products, add_product, add_products_from_pdf, update_pro
 
     if (!res3.ok) return NextResponse.json({ error: 'AI service unavailable' }, { status: 502 });
     const data3 = await res3.json();
-    return NextResponse.json({ reply: data3.choices?.[0]?.message?.content ?? 'Done.' });
+    return NextResponse.json({ reply: data3.choices?.[0]?.message?.content ?? 'Done.', redirect: redirectProductId ? `/dashboard/scan/${redirectProductId}` : undefined });
   }
 
-  return NextResponse.json({ reply: choice2?.content ?? 'Done.' });
+  return NextResponse.json({ reply: choice2?.content ?? 'Done.', redirect: redirectProductId ? `/dashboard/scan/${redirectProductId}` : undefined });
 }

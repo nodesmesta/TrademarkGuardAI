@@ -29,15 +29,35 @@ export default function AnalyticsClient() {
 
   useEffect(() => {
     if (!productId) { setLoading(false); return }
-    const token = localStorage.getItem('token') ?? ''
-    fetch(`/api/products/${productId}/monitoring-results`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setRows(d.monitoringResults ?? [])
-        else setError(d.error ?? 'Failed to load')
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
+    let active = true
+    let intervalId: ReturnType<typeof setInterval> | null = null
+
+    const fetchResults = () => {
+      const token = localStorage.getItem('token') ?? ''
+      fetch(`/api/products/${productId}/monitoring-results`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((d) => {
+          if (!active) return
+          if (d.success) {
+            setRows(d.monitoringResults ?? [])
+            // Stop polling once we have results
+            if ((d.monitoringResults ?? []).length > 0 && intervalId) {
+              clearInterval(intervalId)
+              intervalId = null
+            }
+          } else {
+            setError(d.error ?? 'Failed to load')
+          }
+        })
+        .catch((e) => { if (active) setError(e.message) })
+        .finally(() => { if (active) setLoading(false) })
+    }
+
+    fetchResults()
+    // Poll every 5s until results arrive (scan in progress)
+    intervalId = setInterval(fetchResults, 5000)
+
+    return () => { active = false; if (intervalId) clearInterval(intervalId) }
   }, [productId])
 
   if (!productId) return (

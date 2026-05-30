@@ -4,6 +4,7 @@ import { Send, Bot, User, Loader2, Paperclip, X, FileText } from 'lucide-react'
 import { Button } from '@/features/ui/button'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useRouter } from 'next/navigation'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -25,6 +26,7 @@ async function extractPdfText(file: File): Promise<string> {
 }
 
 export default function ChatBot() {
+  const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Hi! I\'m your TradeGuard AI assistant. I can help you manage products, monitor trademarks, and extract info from PDFs. Try: "Add product Nike Shoes with keywords nike, shoes on instagram and google"' }
   ])
@@ -77,6 +79,9 @@ export default function ChatBot() {
       })
       const data = await res.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply || data.error || 'No response.' }])
+      if (data.redirect) {
+        router.push(data.redirect)
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to connect. Please try again.' }])
     }
