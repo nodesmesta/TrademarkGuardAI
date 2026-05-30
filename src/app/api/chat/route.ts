@@ -119,9 +119,7 @@ async function executeTool(name: string, args: Record<string, unknown>, userId: 
       // Create Triggerware trigger for ongoing monitoring
       const triggerDesc = `Monitor trademark violations for "${product.name}" across e-commerce and social media platforms`;
       tw.createTrigger(triggerDesc, `trademark-${product.id}`).catch(e => console.error('[chat] triggerware create failed:', e));
-      // Fire-and-forget scan
-      monitorProduct(product, 'manual').catch(e => console.error(`[chat] scan failed for ${product.name}:`, e));
-      return `Product "${product.name}" created (ID: ${product.id}), Triggerware trigger activated, scan started.`;
+      return `Product "${product.name}" created (ID: ${product.id}), Triggerware trigger activated. Scan will be triggered by client.`;
     }
     case 'add_products_from_pdf': {
       const { products } = args as { products: { name: string; description?: string; keywords?: string[]; platforms?: string[] }[] };
@@ -140,19 +138,9 @@ async function executeTool(name: string, args: Record<string, unknown>, userId: 
         }
       }
 
-      // Fire-and-forget: run scans in background (avoids 504 timeout)
-      if (created.length > 0) {
-        const scanProducts = created.map(c => ({ ...c }));
-        Promise.resolve().then(async () => {
-          for (const c of scanProducts) {
-            const { data: prod } = await supabaseAdmin.from('products').select('*').eq('id', c.id).single();
-            if (prod) await monitorProduct(prod, 'manual').catch(e => console.error(`[chat] scan failed for ${c.name}:`, e));
-          }
-        });
-      }
-
+      // Scan will be triggered by the client-side scan page after redirect
       return JSON.stringify({
-        message: `${created.length} products added, Triggerware triggers created, scans started in background.`,
+        message: `${created.length} products added, Triggerware triggers created. Scan will start on redirect.`,
         products: created,
       });
     }

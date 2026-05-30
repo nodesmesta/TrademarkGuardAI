@@ -34,6 +34,32 @@ export default function ScanProgressPage() {
         if (p) setProductName(p.name)
       })
 
+    // Trigger scan from client-side (runs in its own serverless function with maxDuration=60)
+    const triggerScan = async () => {
+      try {
+        await fetch(`/api/products/${id}/scan`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+        })
+      } catch (e) {
+        console.error('[scan-page] trigger scan failed:', e)
+      }
+    }
+
+    // Check if scan already has results; if not, trigger it
+    const init = async () => {
+      const res = await fetch(`/api/products/${id}/monitoring-results`, { credentials: 'include', headers })
+      const data = await res.json()
+      const rows = data.monitoringResults ?? []
+      if (rows.length === 0) {
+        triggerScan() // fire scan in dedicated endpoint (awaited server-side)
+      } else {
+        if (active) setResults(rows)
+      }
+    }
+    init()
+
     const poll = async () => {
       const res = await fetch(`/api/products/${id}/monitoring-results`, { credentials: 'include', headers })
       const data = await res.json()
@@ -55,7 +81,6 @@ export default function ScanProgressPage() {
       }
     }
 
-    poll()
     const interval = setInterval(poll, 4000)
     return () => { active = false; clearInterval(interval) }
   }, [id, router])
