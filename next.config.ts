@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
     if (isServer) {
       config.cache = false;
     }
+    // Allow pdfjs-dist worker to be loaded as a static asset
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
     return config;
   },
   
