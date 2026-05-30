@@ -34,6 +34,8 @@ const SEVERITY_COLORS: Record<string, string> = {
 export default function ViolationsTable({ violations = [], className = '' }: { violations: Violation[]; className?: string }) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const perPage = 5;
 
   const platforms = ['all', ...new Set(violations.map((v) => v.platform ?? 'unknown').filter(Boolean))];
 
@@ -42,6 +44,9 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
     const matchSearch = !search || [v.brand, v.title, v.domain, v.seller].some((f) => f?.toLowerCase().includes(search.toLowerCase()));
     return matchPlatform && matchSearch;
   });
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 ${className}`}>
@@ -71,56 +76,70 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
       {filtered.length === 0 ? (
         <p className="text-gray-500 text-sm py-8 text-center">No violations found.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200 dark:border-gray-700">
-                <th className="pb-3 pr-4">Platform</th>
-                <th className="pb-3 pr-4">Title / Domain</th>
-                <th className="pb-3 pr-4">Brand</th>
-                <th className="pb-3 pr-4">Severity</th>
-                <th className="pb-3 pr-4">Confidence</th>
-                <th className="pb-3">URL</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filtered.map((v) => (
-                <tr key={v.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="py-3 pr-4">
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${PLATFORM_COLORS[v.platform ?? ''] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {v.platform ?? 'unknown'}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 max-w-xs">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">{v.title || v.domain}</p>
-                    {v.seller && <p className="text-xs text-gray-400 truncate">{v.seller}</p>}
-                  </td>
-                  <td className="py-3 pr-4 text-gray-600 dark:text-gray-300">{v.brand}</td>
-                  <td className="py-3 pr-4">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${SEVERITY_COLORS[v.severity] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {v.severity}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${v.confidence}%` }} />
-                      </div>
-                      <span className="text-xs text-gray-500">{v.confidence}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3">
-                    {v.url ? (
-                      <a href={v.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs truncate block max-w-[180px]">
-                        {v.url}
-                      </a>
-                    ) : <span className="text-gray-400">—</span>}
-                  </td>
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200 dark:border-gray-700">
+                  <th className="pb-3 pr-4">Platform</th>
+                  <th className="pb-3 pr-4">Title / Domain</th>
+                  <th className="pb-3 pr-4">Brand</th>
+                  <th className="pb-3 pr-4">Severity</th>
+                  <th className="pb-3 pr-4">Confidence</th>
+                  <th className="pb-3">URL</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {paginated.map((v) => (
+                  <tr key={v.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="py-3 pr-4">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${PLATFORM_COLORS[v.platform ?? ''] ?? 'bg-gray-100 text-gray-700'}`}>
+                        {v.platform ?? 'unknown'}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 max-w-xs">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">{v.title || v.domain}</p>
+                      {v.seller && <p className="text-xs text-gray-400 truncate">{v.seller}</p>}
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600 dark:text-gray-300">{v.brand}</td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${SEVERITY_COLORS[v.severity] ?? 'bg-gray-100 text-gray-700'}`}>
+                        {v.severity}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                          <div className="h-full bg-red-500 rounded-full" style={{ width: `${v.confidence}%` }} />
+                        </div>
+                        <span className="text-xs text-gray-500">{v.confidence}%</span>
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      {v.url ? (
+                        <a href={v.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs truncate block max-w-[180px]">
+                          {v.url}
+                        </a>
+                      ) : <span className="text-gray-400">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500">Page {page} of {totalPages} ({filtered.length} results)</p>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(Math.max(0, page - 3), page + 2).map(p => (
+                  <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

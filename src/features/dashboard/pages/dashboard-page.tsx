@@ -23,7 +23,8 @@ function ProductsPanel() {
   const [showForm, setShowForm] = useState(false)
   const [scanning, setScanning] = useState<string | null>(null)
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
-
+  const [page, setPage] = useState(1)
+  const perPage = 5
   const fetchProducts = useCallback(async () => {
     const res = await fetch('/api/products', { credentials: 'include' })
     const data = await res.json()
@@ -61,7 +62,7 @@ function ProductsPanel() {
   }
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registered Products</h2>
         <Button size="sm" onClick={() => setShowForm((v) => !v)} className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -78,26 +79,40 @@ function ProductsPanel() {
       {products.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400 text-sm">No products registered yet. Add one to start monitoring.</p>
       ) : (
-        <ul className="space-y-3">
-          {products.map((p) => (
-            <li key={p.id} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
-                {p.description && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.description}</p>}
-                {p.keywords.length > 0 && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{p.keywords.join(', ')}</p>}
-                {scanMsg[p.id] && <p className="text-xs mt-1 text-green-700 dark:text-green-400">{scanMsg[p.id]}</p>}
+        <>
+          <ul className="space-y-3">
+            {products.slice((page - 1) * perPage, page * perPage).map((p) => (
+              <li key={p.id} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
+                  {p.description && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.description}</p>}
+                  {p.keywords.length > 0 && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{p.keywords.join(', ')}</p>}
+                  {scanMsg[p.id] && <p className="text-xs mt-1 text-green-700 dark:text-green-400">{scanMsg[p.id]}</p>}
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="outline" disabled={scanning === p.id} onClick={() => handleScan(p.id)} className="text-xs">
+                    {scanning === p.id ? 'Scanning...' : 'Scan Now'}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)} className="text-xs text-red-600 hover:text-red-700">
+                    Delete
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {Math.ceil(products.length / perPage) > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500">Page {page} of {Math.ceil(products.length / perPage)} ({products.length} products)</p>
+              <div className="flex gap-1">
+                {Array.from({ length: Math.ceil(products.length / perPage) }, (_, i) => i + 1).map(p => (
+                  <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                    {p}
+                  </button>
+                ))}
               </div>
-              <div className="flex gap-2 shrink-0">
-                <Button size="sm" variant="outline" disabled={scanning === p.id} onClick={() => handleScan(p.id)} className="text-xs">
-                  {scanning === p.id ? 'Scanning...' : 'Scan Now'}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)} className="text-xs text-red-600 hover:text-red-700">
-                  Delete
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -178,10 +193,10 @@ function DashboardContent() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2">
-          <ViolationsTable violations={violations} className="h-[420px] overflow-y-auto" />
+          <ViolationsTable violations={violations} />
         </div>
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 sticky top-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl pb-2">High Priority Alerts</h2>
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">High Priority Alerts</h2>
           <div className="space-y-3">
             {alerts.length > 0
               ? alerts.map((alert) => <AlertCard key={alert.id} alert={alert as any} />)
@@ -194,7 +209,7 @@ function DashboardContent() {
         <div className="xl:col-span-2">
           <ProductsPanel />
         </div>
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
           <RecentActivity activities={activities} />
         </div>
       </div>
