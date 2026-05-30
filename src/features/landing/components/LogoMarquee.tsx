@@ -24,7 +24,7 @@ const logos = [
   {
     name: 'Triggerware',
     href: 'https://triggerware.ai',
-    img: 'https://triggerware.ai/favicon.ico',
+    img: 'https://triggerware.ai/assets/logo.png',
     width: 100,
   },
   {
