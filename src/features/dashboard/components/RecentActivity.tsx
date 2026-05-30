@@ -36,7 +36,7 @@ export default function RecentActivity({ activities, className = '' }: { activit
         ) : paginated.map((a) => {
           const config = TYPE_CONFIG[a.type] ?? TYPE_CONFIG.info;
           return (
-            <div key={a.id} className="flex items-start gap-3">
+            <div key={a.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
               <div className={`p-2 rounded-lg shrink-0 ${config.bg}`}>{config.icon}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{a.action}</p>
