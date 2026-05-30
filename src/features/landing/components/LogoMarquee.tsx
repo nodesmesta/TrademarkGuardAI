@@ -1,65 +1,37 @@
 'use client';
 
+import Image from 'next/image';
+
 const logos = [
   {
-    name: 'BrightData',
+    name: 'Bright Data',
     href: 'https://brightdata.com',
-    svg: (
-      <svg viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-auto">
-        <circle cx="16" cy="16" r="12" fill="currentColor" opacity="0.9" />
-        <circle cx="16" cy="16" r="7" fill="currentColor" opacity="0.6" />
-        <circle cx="16" cy="16" r="3" fill="white" />
-        <text x="34" y="21" fontFamily="system-ui, sans-serif" fontWeight="700" fontSize="13" fill="currentColor">BrightData</text>
-      </svg>
-    ),
+    img: 'https://brightdata.com/favicon.ico',
+    width: 120,
   },
   {
     name: 'Kiro',
     href: 'https://kiro.dev',
-    svg: (
-      <svg viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-auto">
-        <rect x="2" y="4" width="18" height="24" rx="4" fill="currentColor" />
-        <path d="M8 10 L14 16 L8 22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <text x="26" y="21" fontFamily="system-ui, sans-serif" fontWeight="700" fontSize="14" fill="currentColor">Kiro</text>
-      </svg>
-    ),
+    img: 'https://kiro.dev/images/kiro-wordmark.png',
+    width: 80,
   },
   {
     name: 'AI/ML API',
     href: 'https://aimlapi.com',
-    svg: (
-      <svg viewBox="0 0 100 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-auto">
-        <circle cx="10" cy="16" r="4" fill="currentColor" />
-        <circle cx="22" cy="8" r="3" fill="currentColor" opacity="0.7" />
-        <circle cx="22" cy="24" r="3" fill="currentColor" opacity="0.7" />
-        <line x1="13" y1="14" x2="20" y2="10" stroke="currentColor" strokeWidth="1.5" />
-        <line x1="13" y1="18" x2="20" y2="22" stroke="currentColor" strokeWidth="1.5" />
-        <text x="32" y="21" fontFamily="system-ui, sans-serif" fontWeight="700" fontSize="13" fill="currentColor">AI/ML API</text>
-      </svg>
-    ),
+    img: 'https://aimlapi.com/favicon.ico',
+    width: 100,
   },
   {
     name: 'Triggerware',
     href: 'https://triggerware.ai',
-    svg: (
-      <svg viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-auto">
-        <polygon points="8,4 20,16 8,28" fill="currentColor" opacity="0.9" />
-        <polygon points="14,8 24,16 14,24" fill="currentColor" opacity="0.5" />
-        <text x="30" y="21" fontFamily="system-ui, sans-serif" fontWeight="700" fontSize="12" fill="currentColor">Triggerware</text>
-      </svg>
-    ),
+    img: 'https://triggerware.ai/favicon.ico',
+    width: 100,
   },
   {
-    name: 'LabLabAI',
+    name: 'LabLab AI',
     href: 'https://lablab.ai',
-    svg: (
-      <svg viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-auto">
-        <rect x="2" y="8" width="6" height="16" rx="2" fill="currentColor" />
-        <rect x="10" y="4" width="6" height="20" rx="2" fill="currentColor" opacity="0.8" />
-        <rect x="18" y="10" width="6" height="14" rx="2" fill="currentColor" opacity="0.6" />
-        <text x="30" y="21" fontFamily="system-ui, sans-serif" fontWeight="700" fontSize="13" fill="currentColor">LabLabAI</text>
-      </svg>
-    ),
+    img: 'https://lablab.ai/favicon.ico',
+    width: 100,
   },
 ];
 
@@ -77,7 +49,7 @@ export default function LogoMarquee() {
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
 
-          <div className="flex w-max animate-[marquee_15s_linear_infinite]">
+          <div className="flex w-max animate-[marquee_20s_linear_infinite]">
             {[0, 1, 2].map((setIndex) => (
               <div key={setIndex} className="flex shrink-0 items-center gap-16 px-8">
                 {logos.map((logo, i) => (
@@ -86,10 +58,20 @@ export default function LogoMarquee() {
                     href={logo.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 shrink-0 grayscale hover:grayscale-0"
+                    className="flex items-center gap-3 shrink-0 opacity-60 hover:opacity-100 grayscale hover:grayscale-0 brightness-200 hover:brightness-100 transition-all duration-300"
                     title={logo.name}
                   >
-                    {logo.svg}
+                    <Image
+                      src={logo.img}
+                      alt={logo.name}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 object-contain"
+                      unoptimized
+                    />
+                    <span className="text-sm font-semibold text-gray-300 whitespace-nowrap">
+                      {logo.name}
+                    </span>
                   </a>
                 ))}
               </div>

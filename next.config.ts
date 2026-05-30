@@ -4,6 +4,16 @@ const nextConfig: NextConfig = {
   // Use standalone output to avoid webpack bundling issues on Vercel
   output: 'standalone',
   
+  images: {
+    remotePatterns: [
+      { hostname: 'brightdata.com' },
+      { hostname: 'kiro.dev' },
+      { hostname: 'aimlapi.com' },
+      { hostname: 'triggerware.ai' },
+      { hostname: 'lablab.ai' },
+    ],
+  },
+
   // Disable webpack build cache to avoid corrupted cache issues
   webpack: (config, { isServer }) => {
     if (isServer) {
