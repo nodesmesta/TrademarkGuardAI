@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { getAuthUserId } from '@/lib/auth';
 import { getAllActiveProducts, getProductsByUser } from '@/lib/products';
 import { monitorProduct } from '@/lib/monitoring-job';
-
-async function getUserId(req: NextRequest): Promise<string | null> {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '') || req.cookies.get('token')?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!));
-    return payload.sub as string;
-  } catch { return null; }
-}
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -44,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   // User-scoped: scan specific product or all user's products
-  const userId = await getUserId(request);
+  const userId = await getAuthUserId(request);
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const products = product_id

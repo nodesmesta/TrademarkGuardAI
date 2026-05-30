@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
       // Set cookie for middleware - use hard navigation so cookie is sent with next request
-      document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+      document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`
       setUser(data.user)
       // Hard navigation ensures cookie is included in the request to /dashboard
       window.location.href = '/dashboard'

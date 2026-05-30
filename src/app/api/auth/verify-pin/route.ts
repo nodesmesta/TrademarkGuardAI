@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
 
     const user = { id: userId, email: normalizedEmail, name: userName };
 
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieFlags = `Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax${isProduction ? '; Secure' : ''}`;
+
     return NextResponse.json({ success: true, user, token }, {
       headers: {
-        'Set-Cookie': `token=${token}; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Lax; HttpOnly`,
+        'Set-Cookie': `token=${token}; ${cookieFlags}`,
       },
     });
   } catch (e) {

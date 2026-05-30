@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { getAuthUserId } from '@/lib/auth';
 import { getProductsByUser, createProduct, deleteProduct } from '@/lib/products';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { monitorProduct } from '@/lib/monitoring-job';
@@ -102,12 +102,7 @@ const tools = [
 ];
 
 async function getUserId(req: NextRequest): Promise<string | null> {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '') || req.cookies.get('token')?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!));
-    return payload.sub as string;
-  } catch { return null; }
+  return getAuthUserId(req);
 }
 
 async function executeTool(name: string, args: Record<string, unknown>, userId: string): Promise<string> {
