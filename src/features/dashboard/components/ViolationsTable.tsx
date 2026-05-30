@@ -35,7 +35,7 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const perPage = 10;
 
   const platforms = ['all', ...new Set(violations.map((v) => v.platform ?? 'unknown').filter(Boolean))];
 

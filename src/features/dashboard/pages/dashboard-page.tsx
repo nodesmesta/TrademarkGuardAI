@@ -6,7 +6,6 @@ import {
   StatCard,
   ViolationsTable,
   RecentActivity,
-  AlertCard,
 } from '../components'
 import { useRouter } from 'next/navigation'
 import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
@@ -18,9 +17,16 @@ interface Product { id: string; name: string; description?: string; keywords: st
 
 function AlertsPanel({ alerts }: { alerts: any[] }) {
   const [page, setPage] = useState(1)
-  const perPage = 4
+  const perPage = 5
   const totalPages = Math.ceil(alerts.length / perPage)
   const paginated = alerts.slice((page - 1) * perPage, page * perPage)
+
+  const priorityColor: Record<string, string> = {
+    critical: 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10',
+    high: 'border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10',
+    medium: 'border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-900/10',
+    low: 'border-l-green-500 bg-green-50/50 dark:bg-green-900/10',
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -32,9 +38,28 @@ function AlertsPanel({ alerts }: { alerts: any[] }) {
         <p className="text-sm text-gray-500 flex-1 flex items-center justify-center">No alerts at this time.</p>
       ) : (
         <div className="flex flex-col flex-1">
-          <div className="space-y-3 flex-1">
-            {paginated.map((alert: any) => <AlertCard key={alert.id} alert={alert} />)}
-          </div>
+          <ul className="space-y-3 flex-1">
+            {paginated.map((alert: any) => (
+              <li key={alert.id} className={`p-3 rounded-lg border-l-4 ${priorityColor[alert.priority] || priorityColor.medium}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{alert.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{alert.description}</p>
+                  </div>
+                  <span className="text-[10px] text-gray-400 whitespace-nowrap shrink-0">{alert.timestamp}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                    alert.priority === 'critical' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                    alert.priority === 'high' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                    alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                  }`}>{alert.priority}</span>
+                  {alert.actionRequired && <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300">Action Required</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-500">Page {page}/{totalPages}</p>
