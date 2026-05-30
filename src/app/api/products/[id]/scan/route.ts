@@ -27,6 +27,9 @@ export async function POST(
 
   try {
     const { violations, scanned, results } = await monitorProduct(product, 'manual');
+    if (results.length === 0) {
+      return NextResponse.json({ success: false, error: 'Scan produced no results (upstream service may be unavailable)' }, { status: 502 });
+    }
     return NextResponse.json({
       success: true,
       scanned,

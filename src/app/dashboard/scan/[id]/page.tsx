@@ -25,6 +25,7 @@ export default function ScanProgressPage() {
     const token = localStorage.getItem('token') ?? ''
     const headers: Record<string, string> = {}
     if (token) headers.Authorization = `Bearer ${token}`
+    const scanAttempts = { current: 0 }
 
     // Fetch product name
     fetch('/api/products', { credentials: 'include', headers })
@@ -34,16 +35,24 @@ export default function ScanProgressPage() {
         if (p) setProductName(p.name)
       })
 
-    // Trigger scan from client-side (runs in its own serverless function with maxDuration=60)
+    // Trigger scan with retry (max 3 attempts)
     const triggerScan = async () => {
+      if (scanAttempts.current >= 3) return
+      scanAttempts.current++
       try {
-        await fetch(`/api/products/${id}/scan`, {
+        const res = await fetch(`/api/products/${id}/scan`, {
           method: 'POST',
           credentials: 'include',
           headers: { ...headers, 'Content-Type': 'application/json' },
         })
+        if (!res.ok && scanAttempts.current < 3) {
+          setTimeout(triggerScan, 5000) // retry after 5s
+        }
       } catch (e) {
         console.error('[scan-page] trigger scan failed:', e)
+        if (scanAttempts.current < 3) {
+          setTimeout(triggerScan, 5000)
+        }
       }
     }
 
@@ -53,7 +62,7 @@ export default function ScanProgressPage() {
       const data = await res.json()
       const rows = data.monitoringResults ?? []
       if (rows.length === 0) {
-        triggerScan() // fire scan in dedicated endpoint (awaited server-side)
+        triggerScan()
       } else {
         if (active) setResults(rows)
       }
