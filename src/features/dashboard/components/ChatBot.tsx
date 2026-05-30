@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, Paperclip, X } from 'lucide-react'
+import { Send, Bot, User, Loader2, Paperclip, X, FileText } from 'lucide-react'
 import { Button } from '@/features/ui/button'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -47,6 +47,7 @@ export default function ChatBot() {
     try {
       const text = await extractPdfText(file)
       setPdfText(text)
+      setMessages(prev => [...prev, { role: 'user', content: `📎 [${file.name}]` }])
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to parse PDF. Please try another file.' }])
       setPdfFile(null)
@@ -116,6 +117,16 @@ export default function ChatBot() {
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 [&_pre]:bg-gray-800 [&_pre]:text-gray-100 [&_pre]:rounded [&_pre]:p-2 [&_code]:text-xs [&_table]:text-xs [&_th]:px-2 [&_td]:px-2">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                </div>
+              ) : msg.content.startsWith('📎 [') ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-red-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium">{msg.content.replace('📎 [', '').replace(']', '')}</p>
+                    <p className="text-[10px] opacity-70">PDF attached</p>
+                  </div>
                 </div>
               ) : msg.content}
             </div>
