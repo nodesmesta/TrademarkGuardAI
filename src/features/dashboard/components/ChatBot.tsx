@@ -178,9 +178,10 @@ export default function ChatBot() {
         />
         <Button
           size="sm"
+          variant="primary"
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3"
+          className="px-3"
         >
           <Send className="w-4 h-4" />
         </Button>

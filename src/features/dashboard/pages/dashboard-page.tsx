@@ -7,7 +7,6 @@ import {
   ViolationsTable,
   RecentActivity,
   AlertCard,
-  dashboardData as mockDashboardData,
 } from '../components'
 import { useRouter } from 'next/navigation'
 import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
@@ -19,21 +18,21 @@ interface Product { id: string; name: string; description?: string; keywords: st
 
 function AlertsPanel({ alerts }: { alerts: any[] }) {
   const [page, setPage] = useState(1)
-  const perPage = 3
+  const perPage = 4
   const totalPages = Math.ceil(alerts.length / perPage)
   const paginated = alerts.slice((page - 1) * perPage, page * perPage)
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">High Priority Alerts</h2>
         <span className="text-xs text-gray-500">{alerts.length} alerts</span>
       </div>
       {alerts.length === 0 ? (
-        <p className="text-sm text-gray-500">No alerts at this time.</p>
+        <p className="text-sm text-gray-500 flex-1 flex items-center justify-center">No alerts at this time.</p>
       ) : (
-        <>
-          <div className="space-y-3">
+        <div className="flex flex-col flex-1">
+          <div className="space-y-3 flex-1">
             {paginated.map((alert: any) => <AlertCard key={alert.id} alert={alert} />)}
           </div>
           {totalPages > 1 && (
@@ -48,9 +47,9 @@ function AlertsPanel({ alerts }: { alerts: any[] }) {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
-    </>
+    </div>
   )
 }
 
@@ -102,7 +101,7 @@ function ProductsPanel() {
     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registered Products</h2>
-        <Button size="sm" onClick={() => setShowForm((v) => !v)} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button size="sm" onClick={() => setShowForm((v) => !v)} variant={showForm ? 'outline' : 'primary'}>
           {showForm ? 'Cancel' : '+ Add Product'}
         </Button>
       </div>
@@ -130,7 +129,7 @@ function ProductsPanel() {
                   <Button size="sm" variant="outline" disabled={scanning === p.id} onClick={() => handleScan(p.id)} className="text-xs">
                     {scanning === p.id ? 'Scanning...' : 'Scan Now'}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)} className="text-xs text-red-600 hover:text-red-700">
+                  <Button size="sm" variant="danger" onClick={() => handleDelete(p.id)} className="text-xs">
                     Delete
                   </Button>
                 </div>
@@ -167,10 +166,10 @@ function DashboardContent() {
     })
     if (!response.ok) {
       setError(response.status === 401 ? 'Authentication required.' : `Error: ${response.statusText}`)
-      setData(mockDashboardData)
     } else {
       const result = await response.json()
-      setData(result.success ? result.data : mockDashboardData)
+      if (result.success) setData(result.data)
+      else setError('Failed to load dashboard data.')
     }
     setLoading(false)
   }, [])
@@ -192,7 +191,7 @@ function DashboardContent() {
     )
   }
 
-  const { stats, violations, activities, alerts } = data || mockDashboardData
+  const { stats = [], violations = [], activities = [], alerts = [] } = data || {}
 
   return (
     <div className="space-y-8">
@@ -216,7 +215,6 @@ function DashboardContent() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">AI Assistant</h2>
           <ChatBot />
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center items-center text-center">
@@ -229,10 +227,10 @@ function DashboardContent() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2">
-          <ViolationsTable violations={violations} />
+        <div className="xl:col-span-2 flex">
+          <ViolationsTable violations={violations} className="flex-1" />
         </div>
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 flex flex-col">
           <AlertsPanel alerts={alerts} />
         </div>
       </div>
