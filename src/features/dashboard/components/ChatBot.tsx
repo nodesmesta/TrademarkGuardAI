@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, Paperclip, X } from 'lucide-react'
 import { Button } from '@/features/ui/button'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -106,12 +108,16 @@ export default function ChatBot() {
                 <Bot className="w-3.5 h-3.5 text-white" />
               </div>
             )}
-            <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+            <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
               msg.role === 'user'
                 ? 'bg-blue-600 text-white rounded-br-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm'
             }`}>
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 [&_pre]:bg-gray-800 [&_pre]:text-gray-100 [&_pre]:rounded [&_pre]:p-2 [&_code]:text-xs [&_table]:text-xs [&_th]:px-2 [&_td]:px-2">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                </div>
+              ) : msg.content}
             </div>
             {msg.role === 'user' && (
               <div className="w-7 h-7 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center shrink-0 mt-0.5">
