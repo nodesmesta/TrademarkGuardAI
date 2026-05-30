@@ -8,7 +8,6 @@ import {
   Shield, Search, AlertTriangle, Users,
   Settings, Menu, X, Bell, LogOut, User, ChevronDown, Home, FileText, BarChart3, Bot
 } from 'lucide-react'
-import useDashboardStats from '@/features/dashboard/hooks/useDashboardStats'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -41,19 +40,9 @@ export default function DashboardLayout({ children, className }: DashboardLayout
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
   ]
 
-  const { stats } = useDashboardStats()
-  const getBadge = (label: string): number | undefined => {
-    const stat = stats?.find(s => s.label === label)
-    return stat ? parseInt(stat.value, 10) : undefined
-  }
-
   const navItems = baseNavItems.map(item => ({
     ...item,
     active: item.href === pathname,
-    badge: item.id === 'monitoring' ? getBadge('Total Scans')
-      : item.id === 'alerts' ? getBadge('Violations')
-      : item.id === 'users' ? getBadge('Total Products')
-      : undefined,
   }))
 
   const handleLogout = () => { logout(); setUserMenuOpen(false) }
@@ -119,11 +108,6 @@ export default function DashboardLayout({ children, className }: DashboardLayout
                         {item.label}
                       </span>
                     </div>
-                    {item.badge !== undefined && sidebarOpen && (
-                      <span className="ml-auto bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2.5 py-1 rounded-full shadow-sm">
-                        {item.badge}
-                      </span>
-                    )}
                   </Button>
                 </li>
               ))}
