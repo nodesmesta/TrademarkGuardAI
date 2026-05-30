@@ -1,137 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
-import { runMonitoring, MonitoringResult } from '@/lib/brightdata';
 import { getProductsByUser } from '@/lib/products';
-
-function buildDashboardFromMonitoring(results: MonitoringResult[]) {
-  const allViolations = results.flatMap((r) =>
-    r.violations.map((v, i) => ({
-      id: `viol_${r.platform}_${i}_${Date.now()}`,
-      domain: v.url ?? 'unknown.com',
-      brand: r.query,
-      severity: 'high' as const,
-      type: 'Trademark',
-      detected: new Date().toLocaleString('id-ID'),
-      status: 'active' as const,
-      confidence: 85 + Math.floor(Math.random() * 10),
-      url: v.url ?? '',
-      title: v.title ?? 'Unknown',
-      platform: r.platform,
-      seller: v.seller ?? 'Unknown',
-      description: v.description ?? '',
-    }))
-  );
-
-  const totalResults = results.reduce((s, r) => s + (r.results?.length ?? 0), 0);
-  const platformCounts: Record<string, number> = {};
-  results.forEach(r => {
-    platformCounts[r.platform] = (platformCounts[r.platform] || 0) + (r.results?.length ?? 0);
-  });
-  const totalViolations = allViolations.length;
-
-  const stats = [
-    { label: 'Total Produk', value: String(totalResults), change: '+live', changeType: 'positive' as const, icon: 'products' as const },
-    { label: 'Total Scan', value: String(results.length), change: 'live', changeType: 'neutral' as const, icon: 'scan' as const },
-    { label: 'Email Dilaporkan', value: String(totalViolations), change: 'live', changeType: totalViolations > 0 ? 'negative' as const : 'positive' as const, icon: 'email' as const },
-    { label: 'Illegal Produk', value: String(totalViolations), change: 'live', changeType: totalViolations > 0 ? 'negative' as const : 'positive' as const, icon: 'illegal' as const },
-  ];
-
-  const activities = results.slice(0, 5).map((r, i) => ({
-    id: `act_${i}_${Date.now()}`,
-    action: r.violations.length > 0 ? 'Produk illegal terdeteksi' : 'Scan selesai',
-    user: 'System',
-    target: r.violations.length > 0 
-      ? `${r.violations.length} violation(s) on ${r.platform}`
-      : `${r.results.length} results scanned`,
-    timestamp: new Date().toLocaleString('id-ID'),
-    type: r.violations.length > 0 ? 'warning' as const : 'success' as const,
-  }));
-
-  const alerts = allViolations.slice(0, 3).map((v, i) => ({
-    id: `alert_${i}_${Date.now()}`,
-    title: `Kritis: Pelanggaran ${v.brand} terdeteksi`,
-    description: `Website palsu terdeteksi di ${v.platform}: ${v.domain}`,
-    priority: 'critical' as const,
-    timestamp: new Date().toLocaleString('id-ID'),
-    actionRequired: true,
-  }));
-
-  return { stats, violations: allViolations, activities, alerts, platformCounts };
-}
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('Authorization');
-  // Accept token from Authorization header or from "token" cookie
-  const cookieToken = request.cookies.get('token')?.value;
-  const tokenFromHeader = authHeader?.replace('Bearer ', '').trim();
-  const token = tokenFromHeader || cookieToken || '';
+  const token = request.headers.get('Authorization')?.replace('Bearer ', '') || request.cookies.get('token')?.value;
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (!process.env.BRIGHTDATA_API_KEY) {
-      console.error('Brightdata API key missing');
-    }
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('Supabase service role key missing');
-    }
-  // token variable already defined from header or cookie
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  let userId: string, userEmail: string;
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!));
+    userId = payload.sub as string;
+    userEmail = (payload.email as string) ?? '';
+  } catch {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 
-  const jwtSecret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || 'dev-secret');
-  let userId: string;
-let userEmail: string;
-try {
-  const { payload } = await jwtVerify(token, jwtSecret);
-  userId = payload.sub as string;
-  userEmail = payload.email as string;
-} catch (e) {
-  console.warn('[dashboard/data] JWT verification failed:', e);
-  return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-}
-
   const products = await getProductsByUser(userId);
-  
+
   if (products.length === 0) {
     return NextResponse.json({
       success: true,
       data: {
         stats: [
-          { label: 'Total Produk', value: '0', change: '0%', changeType: 'neutral', icon: 'products' },
-          { label: 'Total Scan', value: '0', change: '0%', changeType: 'neutral', icon: 'scan' },
-          { label: 'Email Reported', value: '0', change: '0%', changeType: 'neutral', icon: 'email' },
-          { label: 'Illegal Produk', value: '0', change: '0%', changeType: 'neutral', icon: 'illegal' },
+          { label: 'Products', value: '0', change: '', changeType: 'neutral', icon: 'products' },
+          { label: 'Total Scans', value: '0', change: '', changeType: 'neutral', icon: 'scan' },
+          { label: 'Violations', value: '0', change: '', changeType: 'neutral', icon: 'illegal' },
+          { label: 'Platforms', value: '0', change: '', changeType: 'neutral', icon: 'email' },
         ],
-        violations: [],
-        activities: [],
-        alerts: [],
-        user: { id: userId, email: userEmail, name: '' },
-        source: 'database',
-        timestamp: new Date().toISOString(),
+        violations: [], activities: [], alerts: [], products,
+        user: { id: userId, email: userEmail },
+        source: 'database', timestamp: new Date().toISOString(),
       },
     });
   }
 
-  const allResults: MonitoringResult[] = [];
-  
-  for (const product of products) {
-    const results = await runMonitoring(product.name, product.keywords, 'sync', product.id, userId);
-    allResults.push(...results);
-  }
+  // Baca hasil monitoring terbaru dari DB (bukan re-scan)
+  const productIds = products.map((p) => p.id);
+  const { data: rows } = await supabaseAdmin
+    .from('monitoring_results')
+    .select('*')
+    .in('product_id', productIds)
+    .order('completed_at', { ascending: false })
+    .limit(200);
 
-  const dashboardData = buildDashboardFromMonitoring(allResults);
+  const results = rows ?? [];
+
+  // Build violations list
+  const violations = results.flatMap((r) =>
+    (r.violations as any[] ?? []).map((v: any, i: number) => ({
+      id: `${r.id}_${i}`,
+      domain: v.url ?? v.domain ?? 'unknown',
+      brand: r.search_query,
+      severity: 'high' as const,
+      type: 'Trademark',
+      detected: r.completed_at,
+      status: 'active' as const,
+      confidence: 85 + Math.floor(Math.random() * 10),
+      url: v.url ?? '',
+      title: v.title ?? 'Unknown',
+      platform: r.platform,
+      seller: v.seller ?? '',
+      description: v.description ?? '',
+    }))
+  );
+
+  const totalViolations = results.reduce((s, r) => s + (r.violation_count ?? 0), 0);
+  const platforms = [...new Set(results.map((r) => r.platform))];
+
+  const stats = [
+    { label: 'Products', value: String(products.length), change: '', changeType: 'neutral', icon: 'products' },
+    { label: 'Total Scans', value: String(results.length), change: '', changeType: 'neutral', icon: 'scan' },
+    { label: 'Violations', value: String(totalViolations), change: '', changeType: totalViolations > 0 ? 'negative' : 'positive', icon: 'illegal' },
+    { label: 'Platforms', value: String(platforms.length), change: platforms.join(', '), changeType: 'neutral', icon: 'email' },
+  ];
+
+  const activities = results.slice(0, 10).map((r) => ({
+    id: r.id,
+    action: (r.violation_count ?? 0) > 0 ? 'Violation detected' : 'Scan completed',
+    user: 'System',
+    target: `${r.violation_count ?? 0} violation(s) on ${r.platform} — "${r.search_query}"`,
+    timestamp: r.completed_at,
+    type: (r.violation_count ?? 0) > 0 ? 'warning' : 'success',
+  }));
+
+  const alerts = violations.slice(0, 5).map((v, i) => ({
+    id: `alert_${i}`,
+    title: `Violation: ${v.brand} on ${v.platform}`,
+    description: v.title || v.domain,
+    priority: 'critical' as const,
+    timestamp: v.detected,
+    actionRequired: true,
+  }));
+
+  // Platform breakdown untuk analytics
+  const platformBreakdown = platforms.map((p) => {
+    const pRows = results.filter((r) => r.platform === p);
+    return {
+      platform: p,
+      scanned: pRows.reduce((s, r) => s + ((r.results as any[])?.length ?? 0), 0),
+      violations: pRows.reduce((s, r) => s + (r.violation_count ?? 0), 0),
+    };
+  });
 
   return NextResponse.json({
     success: true,
     data: {
-      ...dashboardData,
-      user: { id: userId, email: userEmail, name: '' },
-      source: 'brightdata',
-      timestamp: new Date().toISOString(),
+      stats, violations, activities, alerts, products,
+      platformBreakdown,
+      user: { id: userId, email: userEmail },
+      source: 'database', timestamp: new Date().toISOString(),
     },
   });
-}
-
-export async function POST() {
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
 }

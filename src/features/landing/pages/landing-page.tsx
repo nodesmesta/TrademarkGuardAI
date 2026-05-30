@@ -2,6 +2,7 @@
 import { ModularNavbar } from '@/features/layout/components/navbar/modular-navbar'
 import { ModularFooter } from '@/features/layout/components/footer'
 import HeroSection from '../components/HeroSection'
+import LogoMarquee from '../components/LogoMarquee'
 import FeaturesSection from '../components/FeaturesSection'
 import HowItWorksSection from '../components/HowItWorksSection'
 import PricingSection from '../components/PricingSection'
@@ -13,6 +14,7 @@ export default function LandingPage() {
     <div className="min-h-screen">
       <ModularNavbar variant="transparent" showAuth={false} />
       <HeroSection />
+      <LogoMarquee />
       <FeaturesSection />
       <HowItWorksSection />
       <PricingSection />
