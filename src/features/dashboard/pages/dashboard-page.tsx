@@ -98,7 +98,7 @@ function ProductsPanel() {
   }
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 flex flex-col flex-1">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registered Products</h2>
         <Button size="sm" onClick={() => setShowForm((v) => !v)} variant={showForm ? 'outline' : 'primary'}>
@@ -236,11 +236,11 @@ function DashboardContent() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 flex">
           <ProductsPanel />
         </div>
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6">
-          <RecentActivity activities={activities} />
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 flex flex-col">
+          <RecentActivity activities={activities} className="flex-1 flex flex-col" />
         </div>
       </div>
     </div>

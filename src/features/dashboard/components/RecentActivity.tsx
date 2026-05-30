@@ -30,8 +30,10 @@ export default function RecentActivity({ activities, className = '' }: { activit
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h2>
         <span className="text-xs text-gray-500">{activities.length} events</span>
       </div>
-      <div className="space-y-3">
-        {paginated.map((a) => {
+      <div className="space-y-3 flex-1">
+        {activities.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-8">No recent activity.</p>
+        ) : paginated.map((a) => {
           const config = TYPE_CONFIG[a.type] ?? TYPE_CONFIG.info;
           return (
             <div key={a.id} className="flex items-start gap-3">

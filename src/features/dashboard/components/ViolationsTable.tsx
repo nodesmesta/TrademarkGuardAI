@@ -49,7 +49,7 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
-    <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 ${className}`}>
+    <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 flex flex-col ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Violations</h2>
@@ -74,9 +74,9 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-gray-500 text-sm py-8 text-center">No violations found.</p>
+        <p className="text-gray-500 text-sm py-8 text-center flex-1 flex items-center justify-center">No violations found.</p>
       ) : (
-        <>
+        <div className="flex flex-col flex-1">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -139,7 +139,7 @@ export default function ViolationsTable({ violations = [], className = '' }: { v
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
