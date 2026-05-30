@@ -45,7 +45,6 @@ export default function ChatBot() {
     try {
       const text = await extractPdfText(file)
       setPdfText(text)
-      setMessages(prev => [...prev, { role: 'assistant', content: `📄 PDF "${file.name}" loaded (${Math.round(text.length / 1000)}k chars). You can now ask me to extract products from it or ask questions about its content.` }])
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to parse PDF. Please try another file.' }])
       setPdfFile(null)
