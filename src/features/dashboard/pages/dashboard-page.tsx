@@ -1,8 +1,7 @@
-"use client";
+"use client"
 import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/features/ui/button'
 import { ProtectedLayout } from '@/features/auth/components/protected-layout'
-import { useAuth } from '@/features/auth/hooks/use-auth'
 import {
   StatCard,
   ViolationsTable,
@@ -14,22 +13,15 @@ import { useRouter } from 'next/navigation'
 import { ProductRegistrationForm } from '../components/ProductRegistrationForm'
 import ChatBot from '../components/ChatBot'
 
-function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizeClasses = { sm: 'w-4 h-4 border-2', md: 'w-8 h-8 border-3', lg: 'w-12 h-12 border-4' }
-  return (
-    <div className={`inline-block animate-spin rounded-full border-blue-600 border-t-transparent ${sizeClasses[size]}`} role="status" aria-label="Loading">
-      <span className="sr-only">Loading...</span>
-    </div>
-  )
-}
+import type { DashboardData } from '../components/types'
 
 interface Product { id: string; name: string; description?: string; keywords: string[]; active: boolean; created_at: string }
 
 function ProductsPanel({ token }: { token: string }) {
-  const router = useRouter();
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [scanning, setScanning] = useState<string | null>(null);
+  const [scanning, setScanning] = useState<string | null>(null)
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
 
   const fetchProducts = useCallback(async () => {
@@ -50,23 +42,21 @@ function ProductsPanel({ token }: { token: string }) {
   }
 
   const handleScan = async (id: string) => {
-    setScanning(id);
-    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning' }));
-      const res = await fetch(`/api/products/${id}/scan`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        router.push(`/dashboard/analytics?product=${id}`);
-      }
-      setScanMsg((prev) => ({
-        ...prev,
-        [id]: data.success
-          ? `Done  ${data.violations} violation(s) found, ${data.scanned} results scanned. Email report sent.`
-          : `Error: ${data.error}`,
-      }));
-      setScanning(null);
+    setScanning(id)
+    setScanMsg((prev) => ({ ...prev, [id]: 'Scanning...' }))
+    const res = await fetch(`/api/products/${id}/scan`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    if (data.success) router.push(`/dashboard/analytics?product=${id}`)
+    setScanMsg((prev) => ({
+      ...prev,
+      [id]: data.success
+        ? `Done — ${data.violations} violation(s) found, ${data.scanned} results scanned.`
+        : `Error: ${data.error}`,
+    }))
+    setScanning(null)
   }
 
   return (
@@ -93,29 +83,14 @@ function ProductsPanel({ token }: { token: string }) {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
                 {p.description && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.description}</p>}
-                {p.keywords.length > 0 && (
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{p.keywords.join(', ')}</p>
-                )}
-                {scanMsg[p.id] && (
-                  <p className="text-xs mt-1 text-green-700 dark:text-green-400">{scanMsg[p.id]}</p>
-                )}
+                {p.keywords.length > 0 && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{p.keywords.join(', ')}</p>}
+                {scanMsg[p.id] && <p className="text-xs mt-1 text-green-700 dark:text-green-400">{scanMsg[p.id]}</p>}
               </div>
               <div className="flex gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={scanning === p.id}
-                  onClick={() => handleScan(p.id)}
-                  className="text-xs"
-                >
-                  scanning === p.id ? 'Scanning' : 'Scan Now'
+                <Button size="sm" variant="outline" disabled={scanning === p.id} onClick={() => handleScan(p.id)} className="text-xs">
+                  {scanning === p.id ? 'Scanning...' : 'Scan Now'}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(p.id)}
-                  className="text-xs text-red-600 hover:text-red-700"
-                >
+                <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)} className="text-xs text-red-600 hover:text-red-700">
                   Delete
                 </Button>
               </div>
@@ -128,10 +103,14 @@ function ProductsPanel({ token }: { token: string }) {
 }
 
 function DashboardContent() {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : ''
+  const [token, setToken] = useState('')
+
+  useEffect(() => {
+    setToken(localStorage.getItem('token') ?? '')
+  }, [])
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true)
@@ -158,7 +137,10 @@ function DashboardContent() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center"><p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard</p></div>
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -166,8 +148,7 @@ function DashboardContent() {
   const { stats, violations, activities, alerts } = data || mockDashboardData
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 lg:px-8">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <Button variant="outline" onClick={fetchDashboardData} disabled={loading} className="flex items-center gap-2">
@@ -180,14 +161,12 @@ function DashboardContent() {
         <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">{error}</div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat: any, i: number) => (
+        {stats.map((stat, i: number) => (
           <StatCard key={i} label={stat.label} value={stat.value} change={stat.change} changeType={stat.changeType} icon={stat.icon} />
         ))}
       </div>
 
-      {/* AI Chatbot */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">AI Assistant</h2>
@@ -195,14 +174,13 @@ function DashboardContent() {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-center items-center text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
-            <span className="text-2xl"></span>
+            <span className="text-2xl">🛡</span>
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Trademark AI</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ask the AI assistant about trademark violations, monitoring strategies, and IP protection tips.</p>
         </div>
       </div>
 
-      {/* Products + Violations */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-8">
           <ViolationsTable violations={violations} />
@@ -210,12 +188,10 @@ function DashboardContent() {
         </div>
         <div className="space-y-8">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">High Priority Alerts</h2>
-            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">High Priority Alerts</h2>
             <div className="space-y-4">
               {alerts.length > 0
-                ? alerts.map((alert: any) => <AlertCard key={alert.id} alert={alert} />)
+                ? alerts.map((alert) => <AlertCard key={alert.id} alert={alert as any} />)
                 : <p className="text-sm text-gray-500">No alerts at this time.</p>}
             </div>
           </div>

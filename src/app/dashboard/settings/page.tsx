@@ -1,31 +1,33 @@
-"use client";
-import React, { useEffect, useState } from 'react';
+"use client"
+import React, { useEffect, useState } from 'react'
 
 interface Product { id: string; name: string; description?: string; keywords: string[]; platforms: string[]; active: boolean }
 
-const ALL_PLATFORMS = ['amazon', 'google', 'instagram', 'tiktok', 'x'];
+const ALL_PLATFORMS = ['amazon', 'google', 'instagram', 'tiktok', 'x']
 
 export default function SettingsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
-  const [form, setForm] = useState({ name: '', description: '', keywords: '', platforms: ['amazon', 'google'] });
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [form, setForm] = useState({ name: '', description: '', keywords: '', platforms: ['amazon', 'google'] })
+  const [token, setToken] = useState('')
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : '';
+  useEffect(() => { setToken(localStorage.getItem('token') ?? '') }, [])
 
   const fetchProducts = () => {
-    fetch('/api/products', { headers: { Authorization: `Bearer ${token}` } })
+    const t = localStorage.getItem('token') ?? ''
+    fetch('/api/products', { headers: { Authorization: `Bearer ${t}` } })
       .then((r) => r.json())
-      .then((d) => { if (d.success) setProducts(d.products); })
-      .finally(() => setLoading(false));
-  };
+      .then((d) => { if (d.success) setProducts(d.products) })
+      .finally(() => setLoading(false))
+  }
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchProducts() }, [])
 
   const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true); setMsg('');
+    e.preventDefault()
+    setSaving(true); setMsg('')
     const res = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -35,39 +37,35 @@ export default function SettingsPage() {
         keywords: form.keywords.split(',').map((k) => k.trim()).filter(Boolean),
         platforms: form.platforms,
       }),
-    });
-    const d = await res.json();
+    })
+    const d = await res.json()
     if (d.success) {
-      setMsg('Product added successfully.');
-      setForm({ name: '', description: '', keywords: '', platforms: ['amazon', 'google'] });
-      fetchProducts();
+      setMsg('Product added successfully.')
+      setForm({ name: '', description: '', keywords: '', platforms: ['amazon', 'google'] })
+      fetchProducts()
     } else {
-      setMsg(d.error ?? 'Failed to add product.');
+      setMsg(d.error ?? 'Failed to add product.')
     }
-    setSaving(false);
-  };
+    setSaving(false)
+  }
 
   const handleDelete = async (id: string) => {
     await fetch('/api/products', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id }),
-    });
-    fetchProducts();
-  };
+    })
+    fetchProducts()
+  }
 
   const togglePlatform = (p: string) => {
-    setForm((f) => ({
-      ...f,
-      platforms: f.platforms.includes(p) ? f.platforms.filter((x) => x !== p) : [...f.platforms, p],
-    }));
-  };
+    setForm((f) => ({ ...f, platforms: f.platforms.includes(p) ? f.platforms.filter((x) => x !== p) : [...f.platforms, p] }))
+  }
 
   return (
-    <div className="p-6 space-y-8 max-w-3xl">
+    <div className="space-y-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
 
-      {/* Add Product */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add Product to Monitor</h2>
         <form onSubmit={handleAdd} className="space-y-4">
@@ -77,7 +75,7 @@ export default function SettingsPage() {
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. Nike"
             />
           </div>
@@ -86,7 +84,7 @@ export default function SettingsPage() {
             <input
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Optional description"
             />
           </div>
@@ -95,7 +93,7 @@ export default function SettingsPage() {
             <input
               value={form.keywords}
               onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
-              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="nike, nike shoes, nike air max"
             />
           </div>
@@ -122,14 +120,13 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving...' : 'Add Product'}
           </button>
         </form>
       </div>
 
-      {/* Existing Products */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Registered Products</h2>
         {loading ? (
@@ -154,17 +151,12 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="text-xs text-red-500 hover:text-red-700 shrink-0 mt-1"
-                >
-                  Delete
-                </button>
+                <button onClick={() => handleDelete(p.id)} className="text-xs text-red-500 hover:text-red-700 shrink-0 mt-1">Delete</button>
               </li>
             ))}
           </ul>
         )}
       </div>
     </div>
-  );
+  )
 }

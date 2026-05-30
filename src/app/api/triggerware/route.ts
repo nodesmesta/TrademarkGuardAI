@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import * as tw from '@/lib/triggerware';
 
-export async function GET() {
+async function authenticate(req: NextRequest): Promise<boolean> {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '') || req.cookies.get('token')?.value;
+  if (!token) return false;
+  try {
+    await jwtVerify(token, new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET!));
+    return true;
+  } catch { return false; }
+}
+
+export async function GET(req: NextRequest) {
+  if (!await authenticate(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const triggers = await tw.listTriggers();
     return NextResponse.json(triggers);
@@ -11,6 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await authenticate(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const body = await req.json();
     const { action } = body;
