@@ -25,7 +25,7 @@ function ProductsPanel({ token }: { token: string }) {
   const [scanMsg, setScanMsg] = useState<Record<string, string>>({})
 
   const fetchProducts = useCallback(async () => {
-    const res = await fetch('/api/products', { headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch('/api/products', { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
     const data = await res.json()
     if (data.success) setProducts(data.products)
   }, [token])
@@ -35,6 +35,7 @@ function ProductsPanel({ token }: { token: string }) {
   const handleDelete = async (id: string) => {
     await fetch('/api/products', {
       method: 'DELETE',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id }),
     })
@@ -46,6 +47,7 @@ function ProductsPanel({ token }: { token: string }) {
     setScanMsg((prev) => ({ ...prev, [id]: 'Scanning...' }))
     const res = await fetch(`/api/products/${id}/scan`, {
       method: 'POST',
+      credentials: 'include',
       headers: { Authorization: `Bearer ${token}` },
     })
     const data = await res.json()
@@ -116,7 +118,8 @@ function DashboardContent() {
     setLoading(true)
     const t = localStorage.getItem('token')
     const response = await fetch('/api/dashboard/data', {
-      headers: t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : {},
+      credentials: 'include',
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     })
     if (!response.ok) {
       setError(response.status === 401 ? 'Authentication required.' : `Error: ${response.statusText}`)

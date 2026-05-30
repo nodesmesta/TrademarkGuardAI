@@ -30,7 +30,7 @@ export default function AnalyticsClient() {
   useEffect(() => {
     if (!productId) { setLoading(false); return }
     const token = localStorage.getItem('token') ?? ''
-    fetch(`/api/products/${productId}/monitoring-results`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/products/${productId}/monitoring-results`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => {
         if (d.success) setRows(d.monitoringResults ?? [])

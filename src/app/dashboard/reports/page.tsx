@@ -27,7 +27,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token') ?? ''
-    fetch('/api/products', { headers: { Authorization: `Bearer ${token}` } })
+    fetch('/api/products', { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => {
         if (d.success && d.products.length) {
@@ -41,7 +41,7 @@ export default function ReportsPage() {
     if (!selected) return
     setLoading(true)
     const token = localStorage.getItem('token') ?? ''
-    fetch(`/api/products/${selected}/monitoring-results`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/products/${selected}/monitoring-results`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => setRows(d.monitoringResults ?? []))
       .finally(() => setLoading(false))

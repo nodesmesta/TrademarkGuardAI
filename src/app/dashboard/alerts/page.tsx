@@ -20,7 +20,7 @@ export default function AlertsPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token') ?? ''
-      const res = await fetch('/api/dashboard/data', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('/api/dashboard/data', { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setAlerts(json.success && Array.isArray(json.data?.alerts) ? json.data.alerts : [])

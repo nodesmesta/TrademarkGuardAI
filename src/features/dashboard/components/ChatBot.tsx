@@ -68,6 +68,7 @@ export default function ChatBot() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMsg],

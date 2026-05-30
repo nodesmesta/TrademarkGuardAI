@@ -17,7 +17,7 @@ export default function Monitoring() {
       setLoading(true)
       try {
         const token = localStorage.getItem('token') ?? ''
-        const res = await fetch('/api/dashboard/data', { headers: { Authorization: `Bearer ${token}` } })
+        const res = await fetch('/api/dashboard/data', { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
         if (!res.ok) return
         const json = await res.json()
         if (json.success) {

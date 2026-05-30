@@ -17,7 +17,7 @@ export default function SettingsPage() {
 
   const fetchProducts = () => {
     const t = localStorage.getItem('token') ?? ''
-    fetch('/api/products', { headers: { Authorization: `Bearer ${t}` } })
+    fetch('/api/products', { credentials: 'include', headers: { Authorization: `Bearer ${t}` } })
       .then((r) => r.json())
       .then((d) => { if (d.success) setProducts(d.products) })
       .finally(() => setLoading(false))
@@ -30,6 +30,7 @@ export default function SettingsPage() {
     setSaving(true); setMsg('')
     const res = await fetch('/api/products', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         name: form.name,
@@ -52,6 +53,7 @@ export default function SettingsPage() {
   const handleDelete = async (id: string) => {
     await fetch('/api/products', {
       method: 'DELETE',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id }),
     })
