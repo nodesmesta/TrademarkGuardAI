@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Baca hasil monitoring terbaru dari DB (bukan re-scan)
+  // Read latest monitoring results from DB
   const productIds = products.map((p) => p.id);
   const { data: rows } = await supabaseAdmin
     .from('monitoring_results')
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     actionRequired: true,
   }));
 
-  // Platform breakdown untuk analytics
+  // Platform breakdown for analytics
   const platformBreakdown = platforms.map((p) => {
     const pRows = results.filter((r) => r.platform === p);
     return {

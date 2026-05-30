@@ -50,9 +50,9 @@ export default function DashboardLayout({ children, className }: DashboardLayout
   const navItems = baseNavItems.map(item => ({
     ...item,
     active: item.href === pathname,
-    badge: item.id === 'monitoring' ? getBadge('Total Scan')
-      : item.id === 'alerts' ? getBadge('Illegal Produk')
-      : item.id === 'users' ? getBadge('Total Produk')
+    badge: item.id === 'monitoring' ? getBadge('Total Scans')
+      : item.id === 'alerts' ? getBadge('Violations')
+      : item.id === 'users' ? getBadge('Total Products')
       : undefined,
   }))
 

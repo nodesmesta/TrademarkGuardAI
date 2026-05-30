@@ -1,30 +1,19 @@
 import React from 'react';
-import { Button } from '@/features/ui/button';
 
-interface ScanItem {
-  id: string;
-  action: string;
-  user: string;
-  target: string;
-  timestamp: string;
-  type: string;
-}
-
-interface Props {
-  scans: ScanItem[];
-}
+interface ScanItem { id: string; action: string; user: string; target: string; timestamp: string; type: string }
+interface Props { scans: ScanItem[] }
 
 export default function RecentScansTable({ scans }: Props) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 overflow-x-auto">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Scan Terbaru</h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Recent Scans</h2>
       <table className="w-full text-left table-auto">
         <thead className="bg-gray-100 dark:bg-gray-700">
           <tr>
-            <th className="px-3 py-2">Waktu</th>
-            <th className="px-3 py-2">Aksi</th>
-            <th className="px-3 py-2">Target</th>
-            <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2 text-xs text-gray-500 uppercase">Time</th>
+            <th className="px-3 py-2 text-xs text-gray-500 uppercase">Action</th>
+            <th className="px-3 py-2 text-xs text-gray-500 uppercase">Target</th>
+            <th className="px-3 py-2 text-xs text-gray-500 uppercase">Status</th>
           </tr>
         </thead>
         <tbody>
