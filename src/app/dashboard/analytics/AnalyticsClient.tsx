@@ -34,7 +34,9 @@ export default function AnalyticsClient() {
 
     const fetchResults = () => {
       const token = localStorage.getItem('token') ?? ''
-      fetch(`/api/products/${productId}/monitoring-results`, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } })
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+      fetch(`/api/products/${productId}/monitoring-results`, { credentials: 'include', headers })
         .then((r) => r.json())
         .then((d) => {
           if (!active) return

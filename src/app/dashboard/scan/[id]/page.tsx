@@ -23,7 +23,8 @@ export default function ScanProgressPage() {
     if (!id) return
     let active = true
     const token = localStorage.getItem('token') ?? ''
-    const headers = { Authorization: `Bearer ${token}` }
+    const headers: Record<string, string> = {}
+    if (token) headers.Authorization = `Bearer ${token}`
 
     // Fetch product name
     fetch('/api/products', { credentials: 'include', headers })
