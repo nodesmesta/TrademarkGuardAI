@@ -61,7 +61,7 @@ function ProductsPanel() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Registered Products</h2>
         <Button size="sm" onClick={() => setShowForm((v) => !v)} className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -177,22 +177,25 @@ function DashboardContent() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 space-y-8">
-          <ViolationsTable violations={violations} />
-          {<ProductsPanel />}
+        <div className="xl:col-span-2">
+          <ViolationsTable violations={violations} className="h-[420px] overflow-y-auto" />
         </div>
-        <div className="space-y-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">High Priority Alerts</h2>
-            <div className="space-y-4">
-              {alerts.length > 0
-                ? alerts.map((alert) => <AlertCard key={alert.id} alert={alert as any} />)
-                : <p className="text-sm text-gray-500">No alerts at this time.</p>}
-            </div>
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 sticky top-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl pb-2">High Priority Alerts</h2>
+          <div className="space-y-3">
+            {alerts.length > 0
+              ? alerts.map((alert) => <AlertCard key={alert.id} alert={alert as any} />)
+              : <p className="text-sm text-gray-500">No alerts at this time.</p>}
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <RecentActivity activities={activities} />
-          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2">
+          <ProductsPanel />
+        </div>
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-[420px] overflow-y-auto">
+          <RecentActivity activities={activities} />
         </div>
       </div>
     </div>
